@@ -2,7 +2,6 @@
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 argument-hint: [premise text] | "continue"
 description: Start planning an epic fantasy novel using the Crucible Structure. Provide a premise/synopsis to begin, or use "continue" to resume an in-progress planning session.
-model: sonnet
 ---
 
 # /crucible-plan

@@ -2,7 +2,6 @@
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 argument-hint: [book number] | "continue"
 description: Create chapter-by-chapter outlines from Crucible planning documents. Requires completed planning phase.
-model: sonnet
 ---
 
 # /crucible-outline

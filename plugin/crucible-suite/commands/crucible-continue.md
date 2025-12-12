@@ -2,7 +2,6 @@
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task
 argument-hint:
 description: Automatically detect project state and resume from where you left off. Works across all phases.
-model: sonnet
 ---
 
 # /crucible-continue

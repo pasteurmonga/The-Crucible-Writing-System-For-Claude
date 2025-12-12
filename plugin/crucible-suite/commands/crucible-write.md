@@ -2,7 +2,6 @@
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task
 argument-hint: [chapter number] | "continue"
 description: Draft novel prose scene-by-scene from Crucible outlines. Includes automatic bi-chapter reviews every 2 chapters.
-model: sonnet
 ---
 
 # /crucible-write

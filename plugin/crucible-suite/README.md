@@ -27,7 +27,7 @@ Crucible Suite guides authors through the complete novel-writing process:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add forsonny/The-Crucible-Writing-System-For-Claude
+/plugin marketplace add https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git#plugin-update
 
 # Install the plugin
 /plugin install crucible-suite@crucible-writing-system

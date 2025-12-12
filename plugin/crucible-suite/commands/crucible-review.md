@@ -2,7 +2,6 @@
 allowed-tools: Read, Glob, Grep, Bash, Task
 argument-hint: [chapter range] | "latest"
 description: Manually trigger a bi-chapter review using 5 specialized agents. Use between automatic reviews or for specific chapters.
-model: sonnet
 ---
 
 # /crucible-review

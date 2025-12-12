@@ -2,7 +2,6 @@
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 argument-hint: [chapter number] | "all"
 description: Revision and editing workflows for Crucible manuscripts. Handles developmental, line, copy editing, and polish.
-model: sonnet
 ---
 
 # /crucible-edit

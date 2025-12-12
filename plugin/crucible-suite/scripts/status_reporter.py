@@ -292,9 +292,10 @@ def format_report_text(report: dict) -> str:
     if report["writing"]["current_chapter"]:
         lines.append(f"├─ Current: Chapter {report['writing']['current_chapter']}, Scene {report['writing'].get('current_scene', '?')}")
 
+    editing_status = 'Not started' if not report['editing']['started'] else f"{report['editing']['chapters_edited']} chapters edited"
     lines.extend([
         "",
-        f"EDITING     {'Not started' if not report['editing']['started'] else f'{report[\"editing\"][\"chapters_edited\"]} chapters edited'}",
+        f"EDITING     {editing_status}",
         "",
         f"Last backup: {report['backups']['latest'] or 'Never'}",
         "═" * 50,
