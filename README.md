@@ -20,7 +20,7 @@ Crucible Suite transforms Claude Code into a comprehensive novel-writing assista
 In Claude Code, run:
 
 ```
-/plugin marketplace add forsonny/The-Crucible-Writing-System-For-Claude
+/plugin marketplace add https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git#plugin-update
 ```
 
 ### Step 2: Install the Plugin
