@@ -1,0 +1,50 @@
+{
+  "description": "Crucible Suite automation hooks for backup, context loading, and quality gates",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/load_project_context.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/backup_on_change.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Evaluate if the Crucible writing session should stop. Check the project state and determine if:\n\n1. The current task (planning/outlining/writing) reached a logical stopping point\n2. A bi-chapter review is needed (if writing and chapter count is even - every 2 chapters)\n3. Any critical issues need addressing before stopping\n\nRespond with JSON in this format:\n{\n  \"decision\": \"approve\" or \"block\",\n  \"reason\": \"Explanation of decision\"\n}\n\nIf a bi-chapter review is needed and hasn't been performed, use decision: \"block\".\nIf the session can end cleanly, use decision: \"approve\".",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Evaluate if this review agent has completed its analysis. Check if:\n\n1. All required checks were performed for the scope requested\n2. A complete structured report was generated\n3. Findings are actionable and specific\n4. Metrics/scores are provided where applicable\n\nRespond with JSON in this format:\n{\n  \"decision\": \"approve\" or \"block\",\n  \"reason\": \"Explanation - include summary of findings if approving\"\n}\n\nIf the analysis is incomplete, use decision: \"block\" with reason explaining what's missing.\nIf the analysis is complete, use decision: \"approve\" with summary of key findings.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
