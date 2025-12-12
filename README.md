@@ -38,33 +38,33 @@ Close and reopen Claude Code to activate the plugin.
 ### Start a New Novel
 
 ```
-/crucible-plan A young blacksmith discovers she can forge weapons that steal memories. When her village is destroyed by a memory-hunting cult, she must master her forbidden gift to save the last people who remember the old ways.
+/crucible-suite:crucible-plan A young blacksmith discovers she can forge weapons that steal memories. When her village is destroyed by a memory-hunting cult, she must master her forbidden gift to save the last people who remember the old ways.
 ```
 
 ### Continue Where You Left Off
 
 ```
-/crucible-continue
+/crucible-suite:crucible-continue
 ```
 
 ### Check Your Progress
 
 ```
-/crucible-status
+/crucible-suite:crucible-status
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/crucible-plan [premise]` | Start planning with a story premise |
-| `/crucible-outline [book#]` | Create chapter outlines from planning docs |
-| `/crucible-write [chapter#]` | Draft prose scene-by-scene |
-| `/crucible-edit [chapter#\|all]` | Revision and editing passes |
-| `/crucible-status` | Show current project progress |
-| `/crucible-continue` | Resume from any phase |
-| `/crucible-review [range]` | Trigger manual quality review |
-| `/crucible-restore [timestamp]` | Restore from automatic backup |
+| `/crucible-suite:crucible-plan [premise]` | Start planning with a story premise |
+| `/crucible-suite:crucible-outline [book#]` | Create chapter outlines from planning docs |
+| `/crucible-suite:crucible-write [chapter#]` | Draft prose scene-by-scene |
+| `/crucible-suite:crucible-edit [chapter#\|all]` | Revision and editing passes |
+| `/crucible-suite:crucible-status` | Show current project progress |
+| `/crucible-suite:crucible-continue` | Resume from any phase |
+| `/crucible-suite:crucible-review [range]` | Trigger manual quality review |
+| `/crucible-suite:crucible-restore [timestamp]` | Restore from automatic backup |
 
 ## The Crucible Structure
 
@@ -165,10 +165,10 @@ A: Yes! The 36-beat structure works for any genre with strong character arcs. Th
 A: Optimized for epic fantasy (120,000–180,000 words). The 36 beats map to ~40–50 chapters.
 
 **Q: What if I already started writing?**
-A: Use `/crucible-continue` to detect your project state. You can generate planning docs retroactively.
+A: Use `/crucible-suite:crucible-continue` to detect your project state. You can generate planning docs retroactively.
 
 **Q: How do reviews work?**
-A: Every two chapters, five agents automatically check voice, continuity, outline adherence, timeline, and prose quality. Run `/crucible-review` for manual checks.
+A: Every two chapters, five agents automatically check voice, continuity, outline adherence, timeline, and prose quality. Run `/crucible-suite:crucible-review` for manual checks.
 
 ## Troubleshooting
 
@@ -176,8 +176,8 @@ A: Every two chapters, five agents automatically check voice, continuity, outlin
 |-------|----------|
 | Commands not recognized | Verify plugin installed: `/plugin` → Manage Plugins |
 | Python scripts fail | Ensure Python 3.8+ is in PATH |
-| Session state lost | Run `/crucible-restore` to recover from backups |
-| Planning seems stuck | Use `/crucible-status`, then `/crucible-continue` |
+| Session state lost | Run `/crucible-suite:crucible-restore` to recover from backups |
+| Planning seems stuck | Use `/crucible-suite:crucible-status`, then `/crucible-suite:crucible-continue` |
 
 ## Contributing
 

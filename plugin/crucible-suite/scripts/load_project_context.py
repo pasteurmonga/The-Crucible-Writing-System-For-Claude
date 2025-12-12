@@ -146,13 +146,13 @@ def get_project_context(project_root: Path) -> str:
         context_parts.extend(phase_context)
     else:
         context_parts.append("No active session state found.")
-        context_parts.append("Use /crucible-plan to start a new project")
-        context_parts.append("or /crucible-continue to resume an existing one.")
+        context_parts.append("Use /crucible-suite:crucible-plan to start a new project")
+        context_parts.append("or /crucible-suite:crucible-continue to resume an existing one.")
 
     context_parts.append("")
     context_parts.append("Available commands:")
-    context_parts.append("  /crucible-status   - Show full project status")
-    context_parts.append("  /crucible-continue - Resume from current point")
+    context_parts.append("  /crucible-suite:crucible-status   - Show full project status")
+    context_parts.append("  /crucible-suite:crucible-continue - Resume from current point")
     context_parts.append("")
     context_parts.append("=== END CRUCIBLE CONTEXT ===")
 

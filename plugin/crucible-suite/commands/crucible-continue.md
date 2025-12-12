@@ -32,7 +32,7 @@ Resume your Crucible project from wherever you left off.
 
 ## Usage
 
-- `/crucible-continue` - Auto-detect and resume
+- `/crucible-suite:crucible-continue` - Auto-detect and resume
 
 ## What This Does
 
@@ -69,7 +69,7 @@ The command checks for:
 ## Example
 
 ```
-/crucible-continue
+/crucible-suite:crucible-continue
 
 Detecting Crucible project state...
 
@@ -98,4 +98,4 @@ D) Do something else
 
 ## Prerequisites
 
-Requires an existing Crucible project with state files. If no project is found, you'll be prompted to start with `/crucible-plan`.
+Requires an existing Crucible project with state files. If no project is found, you'll be prompted to start with `/crucible-suite:crucible-plan`.

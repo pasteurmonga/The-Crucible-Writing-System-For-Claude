@@ -28,7 +28,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/status_reporter.py" "." "text"
 
 ## Usage
 
-- `/crucible-status` - Show full project status
+- `/crucible-suite:crucible-status` - Show full project status
 
 ## What This Shows
 
@@ -102,6 +102,6 @@ Last backup: 2 hours ago
 ## When to Use
 
 - At the start of a session to see where you left off
-- Before `/crucible-continue` to understand project state
+- Before `/crucible-suite:crucible-continue` to understand project state
 - When you're unsure what to do next
 - To verify all planning is complete before outlining

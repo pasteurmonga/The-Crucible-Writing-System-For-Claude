@@ -13,16 +13,16 @@ Revise and edit your Crucible manuscript at multiple levels.
 
 **IMPORTANT:** When this command is invoked, you MUST:
 
-1. **Invoke the `crucible-editor` skill** by following its instructions exactly
-2. Read the skill file at `skills/crucible-editor/SKILL.md` for the complete workflow
+1. **Invoke the `crucible-suite:crucible-editor` skill** using the Skill tool
+2. The skill will guide you through the complete editing workflow
 3. Follow the skill's assessment and multi-level editing protocol
 4. If bi-chapter review reports exist, prioritize the issues they flagged
 
 ## Usage
 
-- `/crucible-edit 1` - Edit chapter 1
-- `/crucible-edit 5-10` - Edit chapters 5 through 10
-- `/crucible-edit all` - Full manuscript editing pass
+- `/crucible-suite:crucible-edit 1` - Edit chapter 1
+- `/crucible-suite:crucible-edit 5-10` - Edit chapters 5 through 10
+- `/crucible-suite:crucible-edit all` - Full manuscript editing pass
 
 ## What This Does
 
@@ -65,7 +65,7 @@ Revise and edit your Crucible manuscript at multiple levels.
 
 ## Prerequisites
 
-Requires draft chapters from `/crucible-write` or imported manuscript.
+Requires draft chapters from `/crucible-suite:crucible-write` or imported manuscript.
 
 Optional but recommended:
 - Original chapter outlines (for developmental editing)

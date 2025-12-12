@@ -1,5 +1,6 @@
 ---
 name: crucible-planner
+# prettier-ignore
 description: Interactive planning system for epic fantasy novels using the Crucible Structure—a 36-beat narrative framework with three interwoven story strands (Quest, Fire, Constellation), four Forge Points, and a Mercy Engine. Use when user wants to plan a fantasy novel, provides a story premise/synopsis, asks to "plan my fantasy book," wants to create planning documents for an epic fantasy, or mentions the Crucible Structure. Guides users through multi-choice questions to generate 7 comprehensive planning documents from a simple premise.
 ---
 

@@ -11,9 +11,9 @@ Trigger a manual review of your chapters using specialized review agents.
 
 ## Usage
 
-- `/crucible-review latest` - Review most recent 2 chapters
-- `/crucible-review 5-6` - Review chapters 5 and 6
-- `/crucible-review 1-4` - Review chapters 1 through 4
+- `/crucible-suite:crucible-review latest` - Review most recent 2 chapters
+- `/crucible-suite:crucible-review 5-6` - Review chapters 5 and 6
+- `/crucible-suite:crucible-review 1-4` - Review chapters 1 through 4
 
 ## Execution Instructions
 

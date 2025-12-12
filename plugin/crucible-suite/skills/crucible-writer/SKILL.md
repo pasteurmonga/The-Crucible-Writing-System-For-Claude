@@ -1,5 +1,6 @@
 ---
 name: crucible-writer
+# prettier-ignore
 description: First-draft writing assistant for Crucible-planned novels. Use when author has completed planning (crucible-planner) and outlining (crucible-outliner) and wants to write the actual prose. Handles scene-by-scene drafting, style matching, continuity tracking, and hallucination prevention. Triggers on "write my novel," "draft chapter X," "start writing from my outline," "help me write my book," or when user has Crucible outline and wants prose output. Works with any Crucible-planned story.
 ---
 

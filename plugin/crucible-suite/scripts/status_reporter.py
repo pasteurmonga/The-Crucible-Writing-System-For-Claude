@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script: status_reporter.py
-Purpose: Generate comprehensive project status report for /crucible-status
+Purpose: Generate comprehensive project status report for /crucible-suite:crucible-status
 Crucible Suite Plugin
 """
 

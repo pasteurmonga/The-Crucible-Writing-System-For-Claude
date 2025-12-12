@@ -11,9 +11,9 @@ Restore your Crucible project from a previous backup.
 
 ## Usage
 
-- `/crucible-restore` - List available backups
-- `/crucible-restore latest` - Restore from most recent backup
-- `/crucible-restore 2024-01-15-1432` - Restore from specific timestamp
+- `/crucible-suite:crucible-restore` - List available backups
+- `/crucible-suite:crucible-restore latest` - Restore from most recent backup
+- `/crucible-suite:crucible-restore 2024-01-15-1432` - Restore from specific timestamp
 
 ## What This Does
 
@@ -55,7 +55,7 @@ Restore specific components:
 ## Example
 
 ```
-/crucible-restore
+/crucible-suite:crucible-restore
 
 Available Backups for "The Memory Forge"
 ═══════════════════════════════════════

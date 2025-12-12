@@ -237,7 +237,7 @@ def format_status_text(status: dict) -> str:
     ])
 
     if status["review_pending"]:
-        lines.append("⚠️  REVIEW PENDING — Run /crucible-review before continuing")
+        lines.append("⚠️  REVIEW PENDING — Run /crucible-suite:crucible-review before continuing")
     else:
         lines.append(f"Chapters until next review: {status['chapters_until_review']}")
         lines.append(f"Last review at chapter: {status['last_review_at_chapter']}")

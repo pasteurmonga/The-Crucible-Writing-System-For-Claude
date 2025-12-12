@@ -13,8 +13,8 @@ Write prose drafts scene-by-scene from your Crucible outlines.
 
 **IMPORTANT:** When this command is invoked, you MUST:
 
-1. **Invoke the `crucible-writer` skill** by following its instructions exactly
-2. Read the skill file at `skills/crucible-writer/SKILL.md` for the complete workflow
+1. **Invoke the `crucible-suite:crucible-writer` skill** using the Skill tool
+2. The skill will guide you through the complete writing workflow
 3. Verify outline is complete before writing
 4. Follow the skill's scene-by-scene protocol
 5. **Track chapter completion** and trigger bi-chapter reviews per the skill instructions
@@ -22,9 +22,9 @@ Write prose drafts scene-by-scene from your Crucible outlines.
 
 ## Usage
 
-- `/crucible-write 1` - Start writing chapter 1
-- `/crucible-write 5` - Jump to chapter 5
-- `/crucible-write continue` - Resume from last position
+- `/crucible-suite:crucible-write 1` - Start writing chapter 1
+- `/crucible-suite:crucible-write 5` - Jump to chapter 5
+- `/crucible-suite:crucible-write continue` - Resume from last position
 
 ## What This Does
 
@@ -52,7 +52,7 @@ Reviews help catch issues before they compound.
 ## Prerequisites
 
 Requires:
-1. Completed chapter outlines from `/crucible-outline`
+1. Completed chapter outlines from `/crucible-suite:crucible-outline`
 2. Style sample (2,000+ words of your writing) OR style preferences
 3. Crucible Summary Card (for quick reference)
 
@@ -75,6 +75,6 @@ The writer follows strict rules:
 ## What Happens Next
 
 After writing completes, you can:
-- `/crucible-edit` - Begin revision and editing
-- `/crucible-review` - Trigger a manual review
+- `/crucible-suite:crucible-edit` - Begin revision and editing
+- `/crucible-suite:crucible-review` - Trigger a manual review
 - Continue writing more chapters

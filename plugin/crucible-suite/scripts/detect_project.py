@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script: detect_project.py
-Purpose: Detect Crucible project state for /crucible-continue
+Purpose: Detect Crucible project state for /crucible-suite:crucible-continue
 Crucible Suite Plugin
 """
 
@@ -192,7 +192,7 @@ def get_resume_point(state: dict) -> dict:
     if phase == "not_started":
         return {
             "action": "start_planning",
-            "message": "No progress found. Start with /crucible-plan"
+            "message": "No progress found. Start with /crucible-suite:crucible-plan"
         }
 
     if phase == "planning":

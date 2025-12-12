@@ -56,38 +56,38 @@ Crucible Suite guides authors through the complete novel-writing process:
 ### Start a New Project
 
 ```
-/crucible-plan [your premise]
+/crucible-suite:crucible-plan [your premise]
 ```
 
 Example:
 ```
-/crucible-plan A young blacksmith discovers she can forge weapons that steal memories. When her village is destroyed by a memory-hunting cult, she must master her forbidden gift to save the last people who remember the old ways.
+/crucible-suite:crucible-plan A young blacksmith discovers she can forge weapons that steal memories. When her village is destroyed by a memory-hunting cult, she must master her forbidden gift to save the last people who remember the old ways.
 ```
 
 ### Continue Where You Left Off
 
 ```
-/crucible-continue
+/crucible-suite:crucible-continue
 ```
 
 ### Check Project Status
 
 ```
-/crucible-status
+/crucible-suite:crucible-status
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/crucible-plan [premise]` | Start planning with a premise |
-| `/crucible-outline [book#]` | Create chapter outlines |
-| `/crucible-write [chapter#]` | Draft prose scene-by-scene |
-| `/crucible-edit [chapter#\|all]` | Revision and editing |
-| `/crucible-status` | Show project progress |
-| `/crucible-continue` | Resume from any phase |
-| `/crucible-review [range]` | Trigger manual review |
-| `/crucible-restore [timestamp]` | Restore from backup |
+| `/crucible-suite:crucible-plan [premise]` | Start planning with a premise |
+| `/crucible-suite:crucible-outline [book#]` | Create chapter outlines |
+| `/crucible-suite:crucible-write [chapter#]` | Draft prose scene-by-scene |
+| `/crucible-suite:crucible-edit [chapter#\|all]` | Revision and editing |
+| `/crucible-suite:crucible-status` | Show project progress |
+| `/crucible-suite:crucible-continue` | Resume from any phase |
+| `/crucible-suite:crucible-review [range]` | Trigger manual review |
+| `/crucible-suite:crucible-restore [timestamp]` | Restore from backup |
 
 ## The Crucible Structure
 
@@ -186,10 +186,10 @@ A: Crucible Suite is optimized for epic fantasy (120,000-180,000 words). The 36 
 A: The planning documents you generate are fully editable. Adjust beat placement, merge beats, or split them as needed for your story.
 
 **Q: What if I already have a partial draft?**
-A: Use `/crucible-continue` to detect your project state. You can generate planning documents retroactively or start outlining from any point.
+A: Use `/crucible-suite:crucible-continue` to detect your project state. You can generate planning documents retroactively or start outlining from any point.
 
 **Q: How do bi-chapter reviews work?**
-A: Every two chapters, the system automatically runs five review agents (voice, continuity, outline, timeline, prose) to catch issues early. You can also trigger reviews manually with `/crucible-review`.
+A: Every two chapters, the system automatically runs five review agents (voice, continuity, outline, timeline, prose) to catch issues early. You can also trigger reviews manually with `/crucible-suite:crucible-review`.
 
 ## Troubleshooting
 
@@ -197,9 +197,9 @@ A: Every two chapters, the system automatically runs five review agents (voice, 
 |-------|----------|
 | **Commands not recognized** | Ensure plugin is installed: check `~/.claude/plugins/crucible-suite/` exists |
 | **Python scripts fail** | Verify Python 3.8+ is installed and in PATH |
-| **Session state lost** | Run `/crucible-restore` to recover from automatic backups |
+| **Session state lost** | Run `/crucible-suite:crucible-restore` to recover from automatic backups |
 | **Review agents timeout** | Large chapters may need more time; break into smaller scenes |
-| **Planning seems stuck** | Use `/crucible-status` to check progress, `/crucible-continue` to resume |
+| **Planning seems stuck** | Use `/crucible-suite:crucible-status` to check progress, `/crucible-suite:crucible-continue` to resume |
 
 ## Contributing
 

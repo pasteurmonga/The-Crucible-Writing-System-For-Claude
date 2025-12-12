@@ -16,14 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **crucible-editor** - Multi-level revision and editing workflow
 
 #### Commands
-- `/crucible-plan` - Start or continue planning with premise
-- `/crucible-outline` - Generate chapter outlines from planning
-- `/crucible-write` - Draft prose from outlines
-- `/crucible-edit` - Revision and editing workflows
-- `/crucible-status` - Show comprehensive project status
-- `/crucible-continue` - Auto-detect and resume from any phase
-- `/crucible-review` - Manual bi-chapter review trigger
-- `/crucible-restore` - Restore from backups
+- `/crucible-suite:crucible-plan` - Start or continue planning with premise
+- `/crucible-suite:crucible-outline` - Generate chapter outlines from planning
+- `/crucible-suite:crucible-write` - Draft prose from outlines
+- `/crucible-suite:crucible-edit` - Revision and editing workflows
+- `/crucible-suite:crucible-status` - Show comprehensive project status
+- `/crucible-suite:crucible-continue` - Auto-detect and resume from any phase
+- `/crucible-suite:crucible-review` - Manual bi-chapter review trigger
+- `/crucible-suite:crucible-restore` - Restore from backups
 
 #### Agents
 - **voice-checker** - Voice and style consistency analysis

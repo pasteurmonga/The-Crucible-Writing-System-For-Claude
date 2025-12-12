@@ -13,16 +13,16 @@ Generate detailed chapter outlines from your Crucible planning documents.
 
 **IMPORTANT:** When this command is invoked, you MUST:
 
-1. **Invoke the `crucible-outliner` skill** by following its instructions exactly
-2. Read the skill file at `skills/crucible-outliner/SKILL.md` for the complete workflow
+1. **Invoke the `crucible-suite:crucible-outliner` skill** using the Skill tool
+2. The skill will guide you through the complete outlining workflow
 3. Verify planning documents are complete before outlining
 4. Follow the skill's beat-to-chapter mapping process
 
 ## Usage
 
-- `/crucible-outline 1` - Outline Book 1
-- `/crucible-outline 2` - Outline Book 2 (for series)
-- `/crucible-outline continue` - Resume outlining session
+- `/crucible-suite:crucible-outline 1` - Outline Book 1
+- `/crucible-suite:crucible-outline 2` - Outline Book 2 (for series)
+- `/crucible-suite:crucible-outline continue` - Resume outlining session
 
 ## What This Does
 
@@ -40,7 +40,7 @@ Generate detailed chapter outlines from your Crucible planning documents.
 
 ## Prerequisites
 
-Requires completed planning documents from `/crucible-plan`:
+Requires completed planning documents from `/crucible-suite:crucible-plan`:
 - Crucible Thesis
 - Strand Maps (Quest, Fire, Constellation)
 - Forge Point Blueprints
@@ -65,7 +65,7 @@ Your outline will follow the Crucible's five movements:
 ## What Happens Next
 
 After outlining completes, you can:
-- `/crucible-write` - Begin drafting prose from your outline
+- `/crucible-suite:crucible-write` - Begin drafting prose from your outline
 - Adjust specific chapter outlines
 - Add more scene detail
 - Outline additional books in a series

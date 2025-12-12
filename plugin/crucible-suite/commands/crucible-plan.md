@@ -13,14 +13,14 @@ Start or continue planning an epic fantasy novel using the Crucible Structure.
 
 **IMPORTANT:** When this command is invoked, you MUST:
 
-1. **Invoke the `crucible-planner` skill** by following its instructions exactly
-2. Read the skill file at `skills/crucible-planner/SKILL.md` for the complete workflow
+1. **Invoke the `crucible-suite:crucible-planner` skill** using the Skill tool
+2. The skill will guide you through the complete planning workflow
 3. Follow the skill's questioning protocol with multi-choice questions
 
 ## Usage
 
-- `/crucible-plan [your premise]` - Start new planning with a premise
-- `/crucible-plan continue` - Resume existing planning session
+- `/crucible-suite:crucible-plan [your premise]` - Start new planning with a premise
+- `/crucible-suite:crucible-plan continue` - Resume existing planning session
 
 ## What This Does
 
@@ -43,12 +43,12 @@ None - this is the first step in the Crucible workflow.
 ## Example
 
 ```
-/crucible-plan A young blacksmith discovers she can forge weapons that steal the memories of those they cut. When her village is destroyed by a memory-hunting cult, she must master her forbidden gift to save the last people who remember the old ways.
+/crucible-suite:crucible-plan A young blacksmith discovers she can forge weapons that steal the memories of those they cut. When her village is destroyed by a memory-hunting cult, she must master her forbidden gift to save the last people who remember the old ways.
 ```
 
 ## What Happens Next
 
 After planning completes, you can:
-- `/crucible-outline` - Create chapter outlines from your planning documents
+- `/crucible-suite:crucible-outline` - Create chapter outlines from your planning documents
 - Review and adjust any planning document
 - Add more detail to specific elements
