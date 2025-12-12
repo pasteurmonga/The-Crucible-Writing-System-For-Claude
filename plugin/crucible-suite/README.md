@@ -23,17 +23,33 @@ Crucible Suite guides authors through the complete novel-writing process:
 
 ## Installation
 
-### From Claude Code Marketplace
+### From GitHub (Recommended)
 
-```
-/install crucible-suite
+```bash
+# Add the marketplace
+/plugin marketplace add forsonny/The-Crucible-Writing-System-For-Claude
+
+# Install the plugin
+/plugin install crucible-suite@crucible-writing-system
+
+# Restart Claude Code to activate
 ```
 
 ### Manual Installation
 
-1. Clone the repository
-2. Copy the `crucible-suite` folder to your Claude Code plugins directory
-3. Restart Claude Code
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git
+   ```
+2. Add as local marketplace:
+   ```bash
+   /plugin marketplace add ./The-Crucible-Writing-System-For-Claude
+   ```
+3. Install:
+   ```bash
+   /plugin install crucible-suite@crucible-writing-system
+   ```
+4. Restart Claude Code
 
 ## Quick Start
 
