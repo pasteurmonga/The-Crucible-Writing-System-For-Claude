@@ -43,23 +43,16 @@ Extract from user input:
 - Protagonist sketch
 - Central conflict hint
 
-**If premise too vague**, use AskUserQuestion:
-```json
-{
-  "questions": [
-    {
-      "header": "Protagonist",
-      "question": "Who is your protagonist?",
-      "options": [
-        {"label": "Reluctant chosen one", "description": "A chosen one who doesn't want the role"},
-        {"label": "Ordinary person", "description": "Thrust into extraordinary circumstances"},
-        {"label": "Fallen powerful", "description": "A powerful figure who's lost everything"},
-        {"label": "Seeking redemption", "description": "A morally gray character seeking redemption"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
+**If premise too vague:**
+```
+I have your core idea. To start planning:
+
+**Who is your protagonist?**
+A) A chosen one who doesn't want the role
+B) An ordinary person thrust into extraordinary circumstances  
+C) A powerful figure who's lost everything
+D) A morally gray character seeking redemption
+E) Other (describe briefly)
 ```
 
 ### Initialize State
@@ -70,32 +63,16 @@ python scripts/init_project.py "./crucible-project" "Title" "Premise"
 
 ### Confirm Scope
 
-Use AskUserQuestion for scope confirmation:
-```json
-{
-  "questions": [
-    {
-      "header": "Length",
-      "question": "What's your target novel length?",
-      "options": [
-        {"label": "Standard (100-150K)", "description": "~20-25 chapters"},
-        {"label": "Epic (150-250K)", "description": "~25-35 chapters"},
-        {"label": "Extended (250K+)", "description": "35+ chapters or series"}
-      ],
-      "multiSelect": false
-    },
-    {
-      "header": "POV",
-      "question": "What's your narrative complexity?",
-      "options": [
-        {"label": "Single protagonist", "description": "One main POV character"},
-        {"label": "Dual protagonists", "description": "Two main POV characters"},
-        {"label": "Ensemble cast", "description": "3-5 POV characters"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
+```
+**Target novel length:**
+A) Standard (100-150K words) — ~20-25 chapters
+B) Epic (150-250K words) — ~25-35 chapters  
+C) Extended (250K+ / series) — 35+ chapters
+
+**Narrative complexity:**
+A) Single protagonist focus
+B) Dual protagonists
+C) Ensemble cast (3-5 POVs)
 ```
 
 ## Phase 2: Document Generation
@@ -267,22 +244,10 @@ planning/
 📄 [View World Forge](computer:///path/planning/world-forge.md)
 📋 [View Quick Reference](computer:///path/planning/crucible-summary.md)
 
-Then use AskUserQuestion for next steps:
-```json
-{
-  "questions": [
-    {
-      "header": "Next Step",
-      "question": "What would you like to do next?",
-      "options": [
-        {"label": "Review documents", "description": "Review and adjust any planning document"},
-        {"label": "Begin outlining", "description": "Start creating chapter outlines"},
-        {"label": "Start drafting", "description": "Jump straight into writing prose"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
+**What's next?**
+A) Review and adjust any document
+B) Begin chapter outline
+C) Start drafting
 ```
 
 ## State Management
