@@ -43,16 +43,23 @@ Extract from user input:
 - Protagonist sketch
 - Central conflict hint
 
-**If premise too vague:**
-```
-I have your core idea. To start planning:
-
-**Who is your protagonist?**
-A) A chosen one who doesn't want the role
-B) An ordinary person thrust into extraordinary circumstances  
-C) A powerful figure who's lost everything
-D) A morally gray character seeking redemption
-E) Other (describe briefly)
+**If premise too vague, use AskUserQuestion:**
+```json
+{
+  "questions": [
+    {
+      "header": "Protagonist",
+      "question": "Who is your protagonist?",
+      "options": [
+        {"label": "Reluctant chosen one", "description": "A chosen one who doesn't want the role"},
+        {"label": "Ordinary hero", "description": "An ordinary person thrust into extraordinary circumstances"},
+        {"label": "Fallen power", "description": "A powerful figure who's lost everything"},
+        {"label": "Seeking redemption", "description": "A morally gray character seeking redemption"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Initialize State
@@ -63,16 +70,32 @@ python scripts/init_project.py "./crucible-project" "Title" "Premise"
 
 ### Confirm Scope
 
-```
-**Target novel length:**
-A) Standard (100-150K words) — ~20-25 chapters
-B) Epic (150-250K words) — ~25-35 chapters  
-C) Extended (250K+ / series) — 35+ chapters
-
-**Narrative complexity:**
-A) Single protagonist focus
-B) Dual protagonists
-C) Ensemble cast (3-5 POVs)
+Use AskUserQuestion to confirm scope:
+```json
+{
+  "questions": [
+    {
+      "header": "Novel Length",
+      "question": "What is your target novel length?",
+      "options": [
+        {"label": "Standard", "description": "100-150K words, ~20-25 chapters"},
+        {"label": "Epic", "description": "150-250K words, ~25-35 chapters"},
+        {"label": "Extended/Series", "description": "250K+ words or multi-book series, 35+ chapters"}
+      ],
+      "multiSelect": false
+    },
+    {
+      "header": "Complexity",
+      "question": "What is your narrative complexity?",
+      "options": [
+        {"label": "Single POV", "description": "Single protagonist focus"},
+        {"label": "Dual POV", "description": "Two protagonists sharing the story"},
+        {"label": "Ensemble", "description": "Multiple POVs (3-5 characters)"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ## Phase 2: Document Generation
@@ -244,10 +267,22 @@ planning/
 📄 [View World Forge](computer:///path/planning/world-forge.md)
 📋 [View Quick Reference](computer:///path/planning/crucible-summary.md)
 
-**What's next?**
-A) Review and adjust any document
-B) Begin chapter outline
-C) Start drafting
+After presenting the document links, use AskUserQuestion for next steps:
+```json
+{
+  "questions": [
+    {
+      "header": "Next Steps",
+      "question": "What would you like to do next?",
+      "options": [
+        {"label": "Review documents", "description": "Review and adjust any planning document"},
+        {"label": "Begin outline", "description": "Start creating chapter outlines from your plan"},
+        {"label": "Start drafting", "description": "Jump straight into writing prose"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ## State Management

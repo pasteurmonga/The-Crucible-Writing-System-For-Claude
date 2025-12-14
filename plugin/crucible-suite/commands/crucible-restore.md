@@ -9,6 +9,10 @@ model: haiku
 
 Restore your Crucible project from a previous backup.
 
+## Execution Instructions
+
+**IMPORTANT:** When presenting backup options to the user, ALWAYS use the AskUserQuestion tool (NOT plain text A/B/C options).
+
 ## Usage
 
 - `/crucible-suite:crucible-restore` - List available backups
@@ -72,12 +76,25 @@ Available Backups for "The Memory Forge"
 4. 2024-01-14-1500 (yesterday)
    └─ Bi-chapter review complete (Ch 8-9)
 
-Select backup to restore:
-A) Backup 1 (latest)
-B) Backup 2
-C) Backup 3
-D) Backup 4
-E) Enter specific timestamp
+```
+
+Then use AskUserQuestion to let user select:
+```json
+{
+  "questions": [
+    {
+      "header": "Restore",
+      "question": "Which backup would you like to restore?",
+      "options": [
+        {"label": "Latest (2 hrs ago)", "description": "Chapter 11 partial, 63,450 words"},
+        {"label": "6 hours ago", "description": "Chapter 10 complete, 60,200 words"},
+        {"label": "Yesterday evening", "description": "Chapter 10 partial, 58,100 words"},
+        {"label": "Enter timestamp", "description": "Specify a different backup timestamp"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ## Safety Features

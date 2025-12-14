@@ -18,6 +18,8 @@ Trigger a manual review of your chapters using specialized review agents.
 
 **IMPORTANT:** When this command is invoked, you MUST:
 
+0. **ALWAYS use the AskUserQuestion tool** for presenting options to the user (NOT plain text A/B/C options)
+
 1. **Determine chapter range** from the argument:
    - `latest` → Read `.crucible/state/draft-state.json` to find the last 2 completed chapters
    - `X-Y` → Use chapters X through Y
@@ -125,9 +127,24 @@ AVERAGE: X/10
 
 NEXT STEPS
 ─────────────────────────────────────
-A) Address critical issues now
-B) Continue writing (will return to issues)
-C) Show detailed report from specific agent
+```
+
+Then use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Next Steps",
+      "question": "How would you like to proceed after this review?",
+      "options": [
+        {"label": "Address issues", "description": "Fix critical issues before continuing"},
+        {"label": "Continue writing", "description": "Note issues and continue (return later)"},
+        {"label": "Show details", "description": "View detailed report from specific agent"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ## When to Use

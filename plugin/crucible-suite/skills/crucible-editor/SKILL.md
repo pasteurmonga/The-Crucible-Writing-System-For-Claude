@@ -24,6 +24,16 @@ The Crucible Editor provides structured editing support at four levels:
 - `references/copy-editing-standards.md` — Grammar and style rules
 - `references/polish-techniques.md` — Final refinement methods
 
+## Questioning Rules
+
+1. **ALWAYS use AskUserQuestion tool** for all user questions (provides interactive UI)
+2. **Max 4 options per question** (tool limit) + "Other" is automatic
+3. **Max 4 questions per AskUserQuestion call**
+4. **Reference specific issues** by location (chapter, scene, paragraph)
+5. **Batch similar decisions** when possible
+
+**CRITICAL: Use the AskUserQuestion tool, NOT plain text A/B/C options.**
+
 ## Required Inputs
 
 Before editing can begin, gather:
@@ -51,21 +61,34 @@ Phase 6: COMPILE → Generate edited manuscript
 
 ### Load Draft Material
 
+Request the draft material:
 ```
 To begin editing, I need:
 
 1. **The chapter(s) to edit** — paste or specify file location
-2. **Editing scope:**
-   A) Full edit (all levels)
-   B) Developmental only
-   C) Line editing only
-   D) Copy editing only
-   E) Polish only
-
-3. **Any specific concerns?** (Optional)
+2. **Any specific concerns?** (Optional)
    - Areas you feel need work
    - Feedback from readers/critique partners
    - Issues flagged in bi-chapter reviews
+```
+
+Then use AskUserQuestion for editing scope:
+```json
+{
+  "questions": [
+    {
+      "header": "Edit Scope",
+      "question": "What level of editing do you want?",
+      "options": [
+        {"label": "Full edit", "description": "All levels: developmental, line, copy, and polish"},
+        {"label": "Developmental only", "description": "Structure, pacing, character arcs, plot coherence"},
+        {"label": "Line editing only", "description": "Scene-level prose improvement, voice consistency"},
+        {"label": "Copy/Polish only", "description": "Grammar, consistency, final refinement"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Initial Assessment
@@ -89,10 +112,24 @@ Overall Quality: [Draft/Rough/Polished]
 
 **Recommended Editing Path:**
 [Specific recommendation based on assessment]
+```
 
-A) Proceed with recommended path
-B) Focus on specific level
-C) Discuss issues first
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Edit Path",
+      "question": "How would you like to proceed?",
+      "options": [
+        {"label": "Recommended path", "description": "Follow the suggested editing sequence"},
+        {"label": "Specific level", "description": "Focus on one particular editing level"},
+        {"label": "Discuss first", "description": "Talk through the issues before deciding"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -147,10 +184,24 @@ Impact: [How this affects the story]
 
 Proposed fix:
 [Specific change or rewrite recommendation]
+```
 
-A) Apply this fix
-B) Skip (will address differently)
-C) Discuss approach
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Fix",
+      "question": "How would you like to handle this developmental issue?",
+      "options": [
+        {"label": "Apply fix", "description": "Implement the proposed change"},
+        {"label": "Skip", "description": "Will address differently or later"},
+        {"label": "Discuss", "description": "Talk through the approach first"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -182,10 +233,24 @@ Issues Found:
 
 Suggested Revisions:
 [Show original vs revised for key passages]
+```
 
-A) Accept all revisions
-B) Review each individually
-C) Skip this scene
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Revisions",
+      "question": "How would you like to handle these line edits?",
+      "options": [
+        {"label": "Accept all", "description": "Apply all suggested revisions"},
+        {"label": "Review each", "description": "Go through revisions one by one"},
+        {"label": "Skip scene", "description": "Move to the next scene"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Common Line Edit Categories
@@ -244,10 +309,24 @@ Critical Fixes (must address):
 
 Minor Fixes (recommended):
 1. [Issue with correction]
+```
 
-A) Apply all fixes
-B) Review critical only
-C) Review each individually
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Copy Fixes",
+      "question": "How would you like to handle these copy edits?",
+      "options": [
+        {"label": "Apply all", "description": "Apply all fixes (critical and minor)"},
+        {"label": "Critical only", "description": "Apply only critical fixes"},
+        {"label": "Review each", "description": "Go through fixes one by one"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -314,10 +393,24 @@ Proposed:
 "[Edited text]"
 
 Reason: [Why this improves the passage]
+```
 
-A) Accept
-B) Reject (keep original)
-C) Modify proposal
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Edit",
+      "question": "Accept this edit proposal?",
+      "options": [
+        {"label": "Accept", "description": "Apply the proposed change"},
+        {"label": "Reject", "description": "Keep the original text"},
+        {"label": "Modify", "description": "Adjust the proposed change"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -340,10 +433,24 @@ Word Count Change: [+/-X words]
 Major Improvements:
 1. [Description]
 2. [Description]
+```
 
-A) Save and proceed to next chapter
-B) Review changes in detail
-C) Revert specific changes
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Chapter Done",
+      "question": "How would you like to proceed?",
+      "options": [
+        {"label": "Save & continue", "description": "Save chapter and proceed to next"},
+        {"label": "Review changes", "description": "Review the changes in detail"},
+        {"label": "Revert changes", "description": "Undo specific changes"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Full Manuscript Edit Report

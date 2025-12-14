@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion
 argument-hint:
 description: Automatically detect project state and resume from where you left off. Works across all phases.
 ---
@@ -8,93 +8,83 @@ description: Automatically detect project state and resume from where you left o
 
 Resume your Crucible project from wherever you left off.
 
-## Execution Instructions
+## CRITICAL: How to Present Options
 
-**IMPORTANT:** When this command is invoked, you MUST:
+When presenting choices to the user, you MUST use the AskUserQuestion tool.
 
-1. **Read state files** to determine current phase:
-   - Check `.crucible/state/planning-state.json` for planning progress
-   - Check `.crucible/state/outline-state.json` for outlining progress
-   - Check `.crucible/state/draft-state.json` for writing progress
-   - Check `.crucible/state/edit-state.json` for editing progress
+### WRONG - Never do this:
+```
+Would you like to:
+A) Continue planning
+B) Review premise
+C) Start fresh
+D) Something else
+```
 
-2. **Determine the active phase** based on which state file has incomplete work
+### RIGHT - Always do this:
+Use the AskUserQuestion tool with this format:
+```json
+{
+  "questions": [
+    {
+      "header": "Continue",
+      "question": "How would you like to proceed?",
+      "options": [
+        {"label": "Continue planning", "description": "Resume from current position"},
+        {"label": "Review premise", "description": "Check the premise before continuing"},
+        {"label": "Start fresh", "description": "Begin planning with a new premise"},
+        {"label": "Something else", "description": "Do something different"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
+```
 
-3. **Invoke the appropriate skill**:
-   - If planning incomplete → Follow `crucible-planner` skill
-   - If outlining incomplete → Follow `crucible-outliner` skill
-   - If writing incomplete → Follow `crucible-writer` skill
-   - If editing incomplete → Follow `crucible-editor` skill
+## Execution Steps
 
-4. **Check for pending bi-chapter reviews** in `draft-state.json`:
-   - If `review_pending: true`, trigger the review before continuing
+1. **Read state files** to determine current phase
+2. **Display project status** as plain text (title, phase, progress)
+3. **Use AskUserQuestion tool** to present options (NOT plain text A/B/C/D)
+4. **Invoke the appropriate skill** based on user selection
 
-## Usage
+## State Files to Check
 
-- `/crucible-suite:crucible-continue` - Auto-detect and resume
+- `.crucible/state/planning-state.json` - Planning progress
+- `.crucible/state/outline-state.json` - Outlining progress  
+- `.crucible/state/draft-state.json` - Writing progress
+- `.crucible/state/edit-state.json` - Editing progress
 
-## What This Does
-
-1. Scans your project for Crucible state files
-2. Determines the current phase and progress
-3. Loads relevant context for that phase
-4. Offers to continue from the exact stopping point
-
-## Auto-Detection Logic
-
-The command checks for:
+## Phase-Specific Options
 
 ### Planning Phase
-- Looks for `.crucible/state/planning-state.json`
-- Identifies which document was in progress
-- Resumes questioning sequence
+Use AskUserQuestion with these options:
+- Continue planning (resume from current document/question)
+- Review premise (check premise before continuing)
+- Start fresh (begin with new premise)
+- Something else
 
 ### Outlining Phase
-- Looks for `.crucible/state/outline-state.json`
-- Identifies which chapter was being outlined
-- Resumes from that chapter
+Use AskUserQuestion with these options:
+- Continue outlining (resume from current chapter)
+- Review previous (check previous chapter first)
+- See full status (view outline progress)
+- Something else
 
 ### Writing Phase
-- Looks for `.crucible/state/draft-state.json`
-- Identifies current chapter and scene
-- Loads story bible and style profile
-- Resumes scene-by-scene writing
+Use AskUserQuestion with these options:
+- Continue writing (resume from current scene)
+- Review previous (check previous scene first)
+- See full status (view writing progress)
+- Something else
 
 ### Editing Phase
-- Looks for `.crucible/state/edit-state.json`
-- Identifies which chapter and editing level
-- Resumes editing workflow
-
-## Example
-
-```
-/crucible-suite:crucible-continue
-
-Detecting Crucible project state...
-
-Found: The Memory Forge
-Current Phase: WRITING
-Progress: Chapter 11, Scene 2 of 4
-
-Last session ended: 2024-01-15 14:32
-Word count: 63,450
-
-Ready to continue writing Chapter 11, Scene 2:
-"The Forge of Memories"
-
-A) Continue from Scene 2
-B) Review Scene 1 first
-C) See full chapter status
-D) Do something else
-```
-
-## When to Use
-
-- At the start of any writing session
-- When you're not sure where you left off
-- After a break of any length
-- When switching between devices
+Use AskUserQuestion with these options:
+- Continue editing (resume from current chapter)
+- Review changes (see what has been edited)
+- See full status (view editing progress)
+- Something else
 
 ## Prerequisites
 
-Requires an existing Crucible project with state files. If no project is found, you'll be prompted to start with `/crucible-suite:crucible-plan`.
+Requires an existing Crucible project with state files.

@@ -27,6 +27,16 @@ Transform Crucible outlines into first-draft prose while maintaining style consi
 - `references/anti-hallucination.md` — Verification protocols
 - `references/prose-craft.md` — Genre conventions and techniques
 
+## Questioning Rules
+
+1. **ALWAYS use AskUserQuestion tool** for all user questions (provides interactive UI)
+2. **Max 4 options per question** (tool limit) + "Other" is automatic
+3. **Max 4 questions per AskUserQuestion call**
+4. **Reference user's story elements** by name (characters, places, etc.)
+5. **Save state after every scene and chapter**
+
+**CRITICAL: Use the AskUserQuestion tool, NOT plain text A/B/C options.**
+
 ## Required Inputs
 
 Before writing can begin, gather:
@@ -81,6 +91,7 @@ Please upload or paste these now.
 
 ### Confirm Writing Parameters
 
+Present the extracted parameters, then use AskUserQuestion:
 ```
 **Writing Parameters:**
 
@@ -89,9 +100,22 @@ POV style: [First/Third Limited/Third Omniscient/Multiple]
 Tense: [Past/Present]
 Genre conventions to follow: [Cultivation fantasy / Epic fantasy / etc.]
 Pacing preference: [Dense/Balanced/Breezy]
+```
 
-A) Confirm these settings
-B) Adjust (specify)
+```json
+{
+  "questions": [
+    {
+      "header": "Parameters",
+      "question": "Do these writing parameters look correct?",
+      "options": [
+        {"label": "Confirm settings", "description": "Proceed with these parameters"},
+        {"label": "Adjust settings", "description": "Modify one or more parameters"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -141,6 +165,7 @@ Pacing:
 
 ### Confirm Style Profile
 
+Present the style profile and sample, then use AskUserQuestion:
 ```
 Based on your sample, here's your style profile:
 
@@ -149,10 +174,23 @@ Based on your sample, here's your style profile:
 **Sample of how I'll write in this style:**
 
 [Write 200-word sample matching the style]
+```
 
-A) This captures my voice—proceed
-B) Adjust [specify what's off]
-C) Show another sample
+```json
+{
+  "questions": [
+    {
+      "header": "Style",
+      "question": "Does this capture your writing voice?",
+      "options": [
+        {"label": "Captures my voice", "description": "Proceed with this style profile"},
+        {"label": "Needs adjustment", "description": "Specify what's off about the style"},
+        {"label": "Show another sample", "description": "See a different example in this style"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -229,10 +267,24 @@ Status: [Under/On target/Over]
 - [✓] Character states consistent
 - [✓] Timeline consistent
 - [✓] No new elements invented
+```
 
-A) Approve and save chapter
-B) Review specific scene
-C) Revise [specify]
+Use AskUserQuestion for chapter approval:
+```json
+{
+  "questions": [
+    {
+      "header": "Chapter",
+      "question": "How would you like to proceed with this chapter?",
+      "options": [
+        {"label": "Approve & save", "description": "Save chapter and continue to next"},
+        {"label": "Review scene", "description": "Look at a specific scene in detail"},
+        {"label": "Revise", "description": "Make changes before saving"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Update Story Bible
@@ -308,10 +360,24 @@ This review runs 5 specialized agents:
 • outline-checker — Outline fidelity
 • timeline-checker — Chronological consistency
 • prose-checker — Craft-level feedback
+```
 
-A) Run bi-chapter review now (recommended)
-B) Skip for now (not recommended)
-C) Run selective review (choose agents)
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Review",
+      "question": "How would you like to proceed with the bi-chapter review?",
+      "options": [
+        {"label": "Run full review (Recommended)", "description": "Run all 5 review agents now"},
+        {"label": "Skip for now", "description": "Continue writing without review (not recommended)"},
+        {"label": "Selective review", "description": "Choose which agents to run"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Invoking Review Agents
@@ -363,10 +429,24 @@ Continuity: X/10
 Outline Fidelity: X/10
 Timeline: X/10
 Prose Quality: X/10
+```
 
-A) Address critical issues now
-B) Continue writing (will return to issues)
-C) Show detailed reports from each agent
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Review Action",
+      "question": "How would you like to proceed after this review?",
+      "options": [
+        {"label": "Address issues now", "description": "Fix critical issues before continuing"},
+        {"label": "Continue writing", "description": "Note issues and continue (will return later)"},
+        {"label": "Show detailed reports", "description": "View full reports from each agent"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -433,11 +513,26 @@ Total words: [X,XXX]
 
 Loading story bible and style profile...
 
-Ready to continue. Options:
-A) Resume from Scene [Y] of Chapter [X]
-B) Review what was written in current chapter
-C) Jump to different chapter
-D) Show story bible state
+Ready to continue.
+```
+
+Use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Resume",
+      "question": "How would you like to continue?",
+      "options": [
+        {"label": "Resume writing", "description": "Continue from Scene [Y] of Chapter [X]"},
+        {"label": "Review current", "description": "Review what was written in current chapter"},
+        {"label": "Jump to chapter", "description": "Go to a different chapter"},
+        {"label": "Show story bible", "description": "View current story bible state"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---
@@ -463,12 +558,23 @@ Confirm adjustment? (Y/N)
 ```
 
 **Plot deviation (author wants to change outline):**
-```
-⚠️ This differs from the outline. Options:
 
-A) Update the outline to match (recommended—keeps all docs in sync)
-B) Proceed without updating (may cause continuity issues later)
-C) Discuss before deciding
+When the author wants to deviate from the outline, use AskUserQuestion:
+```json
+{
+  "questions": [
+    {
+      "header": "Deviation",
+      "question": "This differs from the outline. How would you like to proceed?",
+      "options": [
+        {"label": "Update outline (Recommended)", "description": "Modify outline to match—keeps all docs in sync"},
+        {"label": "Proceed without update", "description": "Continue but may cause continuity issues later"},
+        {"label": "Discuss first", "description": "Talk through the implications before deciding"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ---

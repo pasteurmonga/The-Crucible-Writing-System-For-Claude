@@ -15,6 +15,16 @@ Transform Crucible planning documents into detailed chapter-by-chapter outlines 
 - `references/narrative-craft.md` — Foreshadowing, pacing, scene structure
 - `references/outline-templates.md` — Chapter and scene outline formats
 
+## Questioning Rules
+
+1. **ALWAYS use AskUserQuestion tool** for all user questions (provides interactive UI)
+2. **Max 4 options per question** (tool limit) + "Other" is automatic
+3. **Max 4 questions per AskUserQuestion call**
+4. **Reference user's story elements** by name (characters, places, etc.)
+5. **Save state after each chapter outline**
+
+**CRITICAL: Use the AskUserQuestion tool, NOT plain text A/B/C options.**
+
 ## Required Inputs
 
 The user must have completed Crucible planning. Request uploads of:
@@ -59,17 +69,33 @@ After receiving, extract and confirm:
 
 ### Confirm Scope
 
-```
-**Which book are we outlining?**
-A) Standalone novel
-B) Book [X] of [Y] series — specify which
-C) Full series overview first, then individual books
-
-**Target chapter count:**
-A) Standard (20-25 chapters)
-B) Compact (15-20 chapters)
-C) Extended (25-35 chapters)
-D) Let the story dictate
+Use AskUserQuestion to confirm scope:
+```json
+{
+  "questions": [
+    {
+      "header": "Book Type",
+      "question": "Which book are we outlining?",
+      "options": [
+        {"label": "Standalone novel", "description": "A single, complete novel"},
+        {"label": "Book in series", "description": "Part of a larger series (specify which book)"},
+        {"label": "Series overview", "description": "Full series overview first, then individual books"}
+      ],
+      "multiSelect": false
+    },
+    {
+      "header": "Chapter Count",
+      "question": "What is your target chapter count?",
+      "options": [
+        {"label": "Standard (20-25)", "description": "Typical novel length"},
+        {"label": "Compact (15-20)", "description": "Tighter, faster-paced structure"},
+        {"label": "Extended (25-35)", "description": "More room for subplot development"},
+        {"label": "Story dictates", "description": "Let the narrative determine chapter count"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Initialize Project
@@ -108,9 +134,22 @@ MOVEMENT I — IGNITION (Chapters 1-5)
 
 [Continue for all movements...]
 
-A) Approve structure
-B) Adjust chapter count
-C) Discuss specific sections
+Use AskUserQuestion to confirm:
+```json
+{
+  "questions": [
+    {
+      "header": "Structure",
+      "question": "Does this chapter structure work for your story?",
+      "options": [
+        {"label": "Approve structure", "description": "Proceed with this chapter layout"},
+        {"label": "Adjust count", "description": "Modify the number of chapters"},
+        {"label": "Discuss sections", "description": "Talk through specific movements or chapters"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ### Request Additional Documents
@@ -257,11 +296,23 @@ outline/
 📄 [View Scene Breakdown](computer:///path/outline/scene-breakdown.md)
 📄 [View Foreshadowing Tracker](computer:///path/outline/foreshadowing-tracker.md)
 
-**What's next?**
-A) Review and adjust specific chapters
-B) Outline next book in series
-C) Begin drafting from outline
-D) Add more detail to specific scenes
+Use AskUserQuestion for next steps:
+```json
+{
+  "questions": [
+    {
+      "header": "Next Steps",
+      "question": "What would you like to do next?",
+      "options": [
+        {"label": "Review chapters", "description": "Review and adjust specific chapters"},
+        {"label": "Outline next book", "description": "Continue to next book in series"},
+        {"label": "Begin drafting", "description": "Start writing prose from this outline"},
+        {"label": "Add scene detail", "description": "Expand detail on specific scenes"}
+      ],
+      "multiSelect": false
+    }
+  ]
+}
 ```
 
 ## Multi-Book Series Handling
