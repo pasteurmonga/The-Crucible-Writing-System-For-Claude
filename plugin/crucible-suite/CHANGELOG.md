@@ -135,6 +135,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.3] - 2025-12-14
 
+### Added
+
+#### Version Tracking
+- Added `VERSION` file for simple version tracking
+- Added `bump_version.py` script for version management:
+  - `python bump_version.py patch` - 1.0.3 -> 1.0.4
+  - `python bump_version.py minor` - 1.0.3 -> 1.1.0
+  - `python bump_version.py major` - 1.0.3 -> 2.0.0
+- Script updates both VERSION file and plugin.json
+
 ### Improved
 
 #### Status Report Formatting
