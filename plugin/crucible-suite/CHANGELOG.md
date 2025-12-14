@@ -133,6 +133,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session recovery now preserves full question context, not just answer values
 - Planning progress can be properly resumed after session failures
 
+## [1.0.3] - 2025-12-14
+
+### Fixed
+
+#### Project Detection Bug
+- Fixed `status_reporter.py` and `detect_project.py` failing to find planner-created projects
+- Root cause: Scripts looked for `.crucible/` directory but `init_project.py` creates `state.json` at project root
+- Updated `find_crucible_project()` to detect both structures:
+  - `dotcrucible`: Legacy `.crucible/` directory structure
+  - `rootlevel`: `state.json` at project root (planner-created)
+
+#### Status Reporter
+- Fixed document completion detection to match state.json format (string keys like `"doc1_crucible_thesis"`)
+- Fixed phase detection to recognize in-progress planning (checks `current_document` field)
+- Updated path resolution for planning, outline, draft, and backup directories based on structure type
+
+#### Detect Project
+- Same structure detection improvements as status_reporter.py
+- Planning progress now correctly reads from `state.json` for rootlevel projects
+- File-based fallback detection for outline and draft directories
+
+### Changed
+- Both detection scripts now return structure type alongside project root
+- Status report includes `structure_type` field in output
+
 ## [Unreleased]
 
 ### Planned

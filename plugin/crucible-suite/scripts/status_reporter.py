@@ -17,18 +17,31 @@ if sys.version_info < (3, 8):
     sys.exit(1)
 
 
-def find_crucible_project(start_path: Path = None) -> Path:
-    """Find a Crucible project by looking for .crucible directory."""
+def find_crucible_project(start_path: Path = None) -> tuple[Path, str]:
+    """Find a Crucible project by looking for project markers.
+
+    Returns:
+        Tuple of (project_root, structure_type) where structure_type is:
+        - "dotcrucible": .crucible/ directory structure
+        - "rootlevel": state.json at project root (planner-created)
+        - None if no project found
+    """
     if start_path is None:
         start_path = Path.cwd()
 
     current = Path(start_path)
     for directory in [current] + list(current.parents):
+        # Check for .crucible directory (legacy/future structure)
         crucible_dir = directory / ".crucible"
         if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory
+            return directory, "dotcrucible"
 
-    return None
+        # Check for state.json at root (planner-created structure)
+        state_file = directory / "state.json"
+        if state_file.exists():
+            return directory, "rootlevel"
+
+    return None, None
 
 
 def count_words_in_file(file_path: Path) -> int:
@@ -55,7 +68,7 @@ def get_last_modified(directory: Path) -> str:
     return "Unknown"
 
 
-def generate_status_report(project_root: Path) -> dict:
+def generate_status_report(project_root: Path, structure_type: str = None) -> dict:
     """Generate a comprehensive status report."""
 
     if project_root is None:
@@ -64,11 +77,29 @@ def generate_status_report(project_root: Path) -> dict:
             "error": "No Crucible project found"
         }
 
-    crucible_dir = project_root / ".crucible"
+    # Determine paths based on structure type
+    if structure_type == "dotcrucible":
+        crucible_dir = project_root / ".crucible"
+        planning_dir = crucible_dir / "planning"
+        outline_dir = crucible_dir / "outline"
+        draft_dir = crucible_dir / "draft"
+        state_dir = crucible_dir / "state"
+        backup_dir = crucible_dir / "backups"
+        state_file = None  # Uses individual state files in state_dir
+    else:
+        # rootlevel structure (planner-created)
+        crucible_dir = project_root
+        planning_dir = project_root / "planning"
+        outline_dir = project_root / "outline"
+        draft_dir = project_root / "draft"
+        state_dir = project_root  # state.json at root
+        backup_dir = project_root / "backups"
+        state_file = project_root / "state.json"
 
     report = {
         "success": True,
         "project_root": str(project_root),
+        "structure_type": structure_type,
         "title": "Untitled",
         "phase": "not_started",
         "overall_progress": 0,
@@ -80,7 +111,19 @@ def generate_status_report(project_root: Path) -> dict:
         "recent_files": []
     }
 
-    # Get title from CLAUDE.md
+    # Load state.json for rootlevel structure
+    project_state = {}
+    if state_file and state_file.exists():
+        try:
+            with open(state_file, "r", encoding="utf-8") as f:
+                project_state = json.load(f)
+                # Get title from state
+                if "project" in project_state and "title" in project_state["project"]:
+                    report["title"] = project_state["project"]["title"]
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Get title from CLAUDE.md (fallback or override)
     claude_md = project_root / "CLAUDE.md"
     if claude_md.exists():
         try:
@@ -94,8 +137,21 @@ def generate_status_report(project_root: Path) -> dict:
             pass
 
     # Planning status
-    planning_dir = crucible_dir / "planning"
-    planning_docs = {
+    # Map document numbers to display names (9 documents total)
+    planning_doc_map = {
+        1: "Thesis",
+        2: "Quest Strand",
+        3: "Fire Strand",
+        4: "Constellation Strand",
+        5: "Forge Points",
+        6: "Dark Mirror",
+        7: "Constellation Bible",
+        8: "Mercy Ledger",
+        9: "World Forge"
+    }
+
+    # File-based detection (for compiled documents)
+    file_docs = {
         "crucible-thesis.md": "Thesis",
         "strand-maps": "Strand Maps",
         "forge-points": "Forge Points",
@@ -106,27 +162,58 @@ def generate_status_report(project_root: Path) -> dict:
     }
 
     planning_complete = 0
-    planning_total = len(planning_docs)
+    planning_total = 9  # Total planning documents
     planning_status = {}
 
-    for doc, name in planning_docs.items():
-        doc_path = planning_dir / doc
-        if doc_path.exists():
-            planning_status[name] = "complete"
-            planning_complete += 1
-        else:
-            planning_status[name] = "pending"
+    # Check for rootlevel state.json progress
+    if structure_type == "rootlevel" and project_state:
+        progress = project_state.get("progress", {})
+        documents_complete = progress.get("documents_complete", [])
+        current_doc = progress.get("current_document", 1)
+
+        # Map document numbers to state.json document keys
+        doc_num_to_key = {
+            1: "doc1_crucible_thesis",
+            2: "doc2_quest_strand",
+            3: "doc3_fire_strand",
+            4: "doc4_constellation_strand",
+            5: "doc5_forge_points",
+            6: "doc6_dark_mirror",
+            7: "doc7_constellation_bible",
+            8: "doc8_mercy_ledger",
+            9: "doc9_world_forge"
+        }
+
+        for doc_num, name in planning_doc_map.items():
+            doc_key = doc_num_to_key.get(doc_num)
+            if doc_key and doc_key in documents_complete:
+                planning_status[name] = "complete"
+                planning_complete += 1
+            elif doc_num == current_doc:
+                planning_status[name] = "in_progress"
+            else:
+                planning_status[name] = "pending"
+    else:
+        # File-based detection
+        for doc, name in file_docs.items():
+            doc_path = planning_dir / doc
+            if doc_path.exists():
+                planning_status[name] = "complete"
+                planning_complete += 1
+            else:
+                planning_status[name] = "pending"
+        planning_total = len(file_docs)
 
     report["planning"] = {
         "complete": planning_complete,
         "total": planning_total,
         "percentage": int((planning_complete / planning_total) * 100) if planning_total > 0 else 0,
         "documents": planning_status,
-        "last_modified": get_last_modified(planning_dir)
+        "last_modified": get_last_modified(planning_dir),
+        "current_document": project_state.get("progress", {}).get("current_document") if structure_type == "rootlevel" else None
     }
 
     # Outline status
-    outline_dir = crucible_dir / "outline"
     by_chapter_dir = outline_dir / "by-chapter"
 
     outline_chapters = []
@@ -135,14 +222,18 @@ def generate_status_report(project_root: Path) -> dict:
 
     # Try to get total from state or default
     total_chapters = 25  # Default
-    state_file = crucible_dir / "state" / "outline-state.json"
-    if state_file.exists():
-        try:
-            with open(state_file, "r", encoding="utf-8") as f:
-                state = json.load(f)
-                total_chapters = state.get("total_chapters", 25)
-        except (json.JSONDecodeError, OSError):
-            pass
+    if structure_type == "rootlevel":
+        # Get from project_state scope
+        total_chapters = project_state.get("scope", {}).get("chapters", 25) or 25
+    else:
+        outline_state_file = state_dir / "outline-state.json"
+        if outline_state_file.exists():
+            try:
+                with open(outline_state_file, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                    total_chapters = state.get("total_chapters", 25)
+            except (json.JSONDecodeError, OSError):
+                pass
 
     report["outline"] = {
         "complete": len(outline_chapters),
@@ -152,7 +243,6 @@ def generate_status_report(project_root: Path) -> dict:
     }
 
     # Writing status
-    draft_dir = crucible_dir / "draft"
     chapters_dir = draft_dir / "chapters"
 
     draft_chapters = []
@@ -167,11 +257,15 @@ def generate_status_report(project_root: Path) -> dict:
 
     # Get target words from state
     target_words = 150000  # Default
-    draft_state_file = crucible_dir / "state" / "draft-state.json"
     current_chapter = None
     current_scene = None
 
-    if draft_state_file.exists():
+    if structure_type == "dotcrucible":
+        draft_state_file = state_dir / "draft-state.json"
+    else:
+        draft_state_file = None  # rootlevel doesn't use separate draft state file yet
+
+    if draft_state_file and draft_state_file.exists():
         try:
             with open(draft_state_file, "r", encoding="utf-8") as f:
                 state = json.load(f)
@@ -193,27 +287,27 @@ def generate_status_report(project_root: Path) -> dict:
     }
 
     # Editing status
-    edit_state_file = crucible_dir / "state" / "edit-state.json"
     editing_info = {
         "started": False,
         "chapters_edited": 0,
         "current_phase": "not_started"
     }
 
-    if edit_state_file.exists():
-        try:
-            with open(edit_state_file, "r", encoding="utf-8") as f:
-                state = json.load(f)
-                editing_info["started"] = True
-                editing_info["chapters_edited"] = len(state.get("chapters", {}))
-                editing_info["current_phase"] = state.get("current_phase", "assessment")
-        except (json.JSONDecodeError, OSError):
-            pass
+    if structure_type == "dotcrucible":
+        edit_state_file = state_dir / "edit-state.json"
+        if edit_state_file.exists():
+            try:
+                with open(edit_state_file, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                    editing_info["started"] = True
+                    editing_info["chapters_edited"] = len(state.get("chapters", {}))
+                    editing_info["current_phase"] = state.get("current_phase", "assessment")
+            except (json.JSONDecodeError, OSError):
+                pass
 
     report["editing"] = editing_info
 
     # Backup status
-    backup_dir = crucible_dir / "backups"
     manifest_file = backup_dir / "backup-manifest.json"
 
     backup_info = {
@@ -240,7 +334,7 @@ def generate_status_report(project_root: Path) -> dict:
         report["phase"] = "writing"
     elif report["outline"]["complete"] > 0:
         report["phase"] = "outlining"
-    elif report["planning"]["complete"] > 0:
+    elif report["planning"]["complete"] > 0 or report["planning"].get("current_document"):
         report["phase"] = "planning"
     else:
         report["phase"] = "not_started"
@@ -322,8 +416,8 @@ def main():
         except json.JSONDecodeError:
             pass
 
-    project_root = find_crucible_project(start_path)
-    report = generate_status_report(project_root)
+    project_root, structure_type = find_crucible_project(start_path)
+    report = generate_status_report(project_root, structure_type)
 
     if output_format == "text":
         print(format_report_text(report))
