@@ -107,6 +107,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated README.md with correct GitHub repository URL
 - Enhanced backup_on_change.py path detection for Crucible files
 
+## [1.0.2] - 2025-12-14
+
+### Added
+
+#### Answer Persistence System
+- Full context storage for planning answers (question + answer + description)
+- CLI interface for `save_state.py` with 5 parameters:
+  - `--answer <document> <key> <question> <answer> <description>`
+  - `--progress <doc_num> <question_num>`
+  - `--complete <doc_num>`
+  - `--scope <length> <complexity>`
+- New `question-key-mapping.md` reference file with all 75 question-to-state-key mappings
+- Answer Persistence Workflow section in crucible-planner SKILL.md
+- Resuming Planning section in crucible-continue.md with saved answer display
+
+#### Backward Compatibility
+- `get_answer()` helper function in `compile_documents.py` handles both old (string) and new (dict) answer formats
+
+### Changed
+- Planning answers now stored as objects with full context instead of plain strings
+- `/crucible-continue` now displays previously saved answers when resuming planning sessions
+
+### Fixed
+- Session recovery now preserves full question context, not just answer values
+- Planning progress can be properly resumed after session failures
+
 ## [Unreleased]
 
 ### Planned
