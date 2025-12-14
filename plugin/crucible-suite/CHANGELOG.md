@@ -135,6 +135,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.3] - 2025-12-14
 
+### Improved
+
+#### Status Report Formatting
+- Redesigned `format_report_text()` with clean ASCII box layout
+- Added visual progress bars `[####----]` for each phase
+- Added status icons: `[x]` complete, `[>]` in progress, `[ ]` pending
+- Organized sections with clear headers (PLANNING, OUTLINE, WRITING, EDITING, BACKUP)
+- Cross-platform ASCII characters (works on Windows cmd/PowerShell)
+
 ### Fixed
 
 #### Project Detection Bug

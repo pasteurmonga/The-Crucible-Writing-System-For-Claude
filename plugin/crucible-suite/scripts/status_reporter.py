@@ -353,47 +353,111 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
 
 
 def format_report_text(report: dict) -> str:
-    """Format the report as readable text output."""
+    """Format the report as beautiful text output."""
     if not report.get("success"):
         return f"Error: {report.get('error', 'Unknown error')}"
 
-    lines = [
-        "═" * 50,
-        f"CRUCIBLE PROJECT STATUS",
-        "═" * 50,
-        "",
-        f"📚 {report['title']}",
-        f"   Phase: {report['phase'].upper()}",
-        f"   Progress: {report['overall_progress']}% complete",
-        "",
-        f"PLANNING    {'█' * (report['planning']['percentage'] // 5)}{'░' * (20 - report['planning']['percentage'] // 5)} {report['planning']['percentage']}%",
-    ]
+    # ASCII-safe box drawing characters
+    H, V = "-", "|"
+    CORNER = "+"
+
+    width = 58
+    inner = width - 4
+
+    def box_line(char="-"):
+        return f"+{char * (width - 2)}+"
+
+    def text_line(text, align="left"):
+        if align == "center":
+            padded = text.center(inner)
+        else:
+            padded = text.ljust(inner)
+        return f"| {padded} |"
+
+    def progress_bar(percent, bar_width=24):
+        filled = int(bar_width * percent / 100)
+        empty = bar_width - filled
+        return f"[{'#' * filled}{'-' * empty}]"
+
+    def section_header(title):
+        pad_total = width - len(title) - 4
+        pad_left = pad_total // 2
+        pad_right = pad_total - pad_left
+        return f"+{'-' * pad_left} {title} {'-' * pad_right}+"
+
+    # Build the report
+    lines = []
+
+    # Title box
+    lines.append(box_line("="))
+    lines.append(text_line(""))
+    lines.append(text_line("~ THE CRUCIBLE ~", "center"))
+    lines.append(text_line(report['title'], "center"))
+    lines.append(text_line(""))
+    lines.append(box_line("="))
+
+    # Phase and progress
+    phase_display = report['phase'].replace('_', ' ').upper()
+    lines.append(text_line(""))
+    lines.append(text_line(f"  Phase:    {phase_display}"))
+    lines.append(text_line(f"  Progress: {progress_bar(report['overall_progress'])} {report['overall_progress']:3d}%"))
+    lines.append(text_line(""))
+
+    # Planning section
+    lines.append(section_header("PLANNING"))
+    lines.append(text_line(""))
+    plan_pct = report['planning']['percentage']
+    lines.append(text_line(f"  {progress_bar(plan_pct)} {plan_pct:3d}%  ({report['planning']['complete']}/{report['planning']['total']})"))
+    lines.append(text_line(""))
 
     for doc, status in report["planning"]["documents"].items():
-        icon = "✓" if status == "complete" else "○"
-        lines.append(f"├─ {doc}: {icon}")
+        if status == "complete":
+            icon = "[x]"
+        elif status == "in_progress":
+            icon = "[>]"
+        else:
+            icon = "[ ]"
+        lines.append(text_line(f"    {icon} {doc}"))
 
-    lines.extend([
-        "",
-        f"OUTLINING   {'█' * (report['outline']['percentage'] // 5)}{'░' * (20 - report['outline']['percentage'] // 5)} {report['outline']['percentage']}%",
-        f"├─ Chapters outlined: {report['outline']['complete']}/{report['outline']['total']}",
-        "",
-        f"WRITING     {'█' * (report['writing']['percentage'] // 5)}{'░' * (20 - report['writing']['percentage'] // 5)} {report['writing']['percentage']}%",
-        f"├─ Chapters written: {report['writing']['chapters_complete']}/{report['writing']['total_chapters']}",
-        f"├─ Word count: {report['writing']['word_count']:,} / {report['writing']['target_words']:,}",
-    ])
+    lines.append(text_line(""))
+
+    # Outline section
+    lines.append(section_header("OUTLINE"))
+    lines.append(text_line(""))
+    out_pct = report['outline']['percentage']
+    lines.append(text_line(f"  {progress_bar(out_pct)} {out_pct:3d}%  ({report['outline']['complete']}/{report['outline']['total']} ch)"))
+    lines.append(text_line(""))
+
+    # Writing section
+    lines.append(section_header("WRITING"))
+    lines.append(text_line(""))
+    write_pct = report['writing']['percentage']
+    lines.append(text_line(f"  {progress_bar(write_pct)} {write_pct:3d}%"))
+    lines.append(text_line(""))
+    lines.append(text_line(f"    Chapters:  {report['writing']['chapters_complete']}/{report['writing']['total_chapters']}"))
+    lines.append(text_line(f"    Words:     {report['writing']['word_count']:,} / {report['writing']['target_words']:,}"))
 
     if report["writing"]["current_chapter"]:
-        lines.append(f"├─ Current: Chapter {report['writing']['current_chapter']}, Scene {report['writing'].get('current_scene', '?')}")
+        lines.append(text_line(f"    Current:   Ch {report['writing']['current_chapter']}, Scene {report['writing'].get('current_scene', '?')}"))
+    lines.append(text_line(""))
 
-    editing_status = 'Not started' if not report['editing']['started'] else f"{report['editing']['chapters_edited']} chapters edited"
-    lines.extend([
-        "",
-        f"EDITING     {editing_status}",
-        "",
-        f"Last backup: {report['backups']['latest'] or 'Never'}",
-        "═" * 50,
-    ])
+    # Editing section
+    lines.append(section_header("EDITING"))
+    lines.append(text_line(""))
+    if report['editing']['started']:
+        lines.append(text_line(f"    Status:    {report['editing']['current_phase'].replace('_', ' ').title()}"))
+        lines.append(text_line(f"    Chapters:  {report['editing']['chapters_edited']} edited"))
+    else:
+        lines.append(text_line("    Status:    Not started"))
+    lines.append(text_line(""))
+
+    # Footer
+    lines.append(section_header("BACKUP"))
+    lines.append(text_line(""))
+    backup_text = report['backups']['latest'] or 'Never'
+    lines.append(text_line(f"    Last:      {backup_text}"))
+    lines.append(text_line(""))
+    lines.append(box_line("="))
 
     return "\n".join(lines)
 
