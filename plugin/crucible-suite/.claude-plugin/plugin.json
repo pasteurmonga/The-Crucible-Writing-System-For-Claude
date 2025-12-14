@@ -8,6 +8,5 @@
   "homepage": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude",
   "repository": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude",
   "license": "MIT",
-  "keywords": ["writing", "fantasy", "novel", "crucible-structure", "planning", "outlining", "creative-writing"],
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["writing", "fantasy", "novel", "crucible-structure", "planning", "outlining", "creative-writing"]
 }

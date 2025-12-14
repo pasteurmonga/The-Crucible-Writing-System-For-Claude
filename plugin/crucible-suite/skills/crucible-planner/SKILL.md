@@ -106,8 +106,98 @@ Use AskUserQuestion to confirm scope:
 2. **Max 4 options per question** (tool limit) + "Other" is automatic
 3. **Max 4 questions per AskUserQuestion call**
 4. **Reference previous answers** to build coherence
-5. **Save state after each cluster**
+5. **Save state IMMEDIATELY after EACH answer** (see Answer Persistence below)
 6. **Verify before moving to next document**
+
+### Answer Persistence Workflow
+
+**CRITICAL: Save every answer immediately after receiving it with FULL CONTEXT.** This ensures progress is preserved if the session fails and answers can be understood later.
+
+#### Save Command Format
+
+Each answer is saved with the question text, selected answer, and description:
+
+```bash
+python scripts/save_state.py "<project_path>" --answer "<document>" "<state_key>" "<question_text>" "<answer>" "<description>"
+```
+
+**Parameters:**
+1. `document` - The document key (e.g., "doc1_crucible_thesis")
+2. `state_key` - The field name (e.g., "burden_type")
+3. `question_text` - The full question that was asked
+4. `answer` - The selected option label
+5. `description` - The description of the selected option
+
+#### Step-by-Step Workflow
+
+1. **Ask the question using AskUserQuestion:**
+   ```json
+   {
+     "questions": [{
+       "header": "Burden",
+       "question": "What form does the external burden take in your story?",
+       "options": [
+         {"label": "Physical object", "description": "An artifact that must be destroyed or protected"},
+         {"label": "Person to save", "description": "Someone who must be rescued or kept alive"}
+       ],
+       "multiSelect": false
+     }]
+   }
+   ```
+
+2. **User selects:** "Physical object"
+
+3. **IMMEDIATELY save with full context:**
+   ```bash
+   python scripts/save_state.py "./crucible-project" --answer "doc1_crucible_thesis" "burden_type" "What form does the external burden take in your story?" "Physical object" "An artifact that must be destroyed or protected"
+   ```
+
+4. **Verify save succeeded** (output shows question and answer)
+
+5. **Ask next question**
+
+#### What Gets Saved
+
+Each answer is stored as:
+```json
+{
+  "question": "What form does the external burden take in your story?",
+  "answer": "Physical object",
+  "description": "An artifact that must be destroyed or protected"
+}
+```
+
+This provides full context when resuming or reviewing progress.
+
+#### Example Save Commands
+
+**Document 1 (Crucible Thesis):**
+```bash
+python scripts/save_state.py "./project" --answer "doc1_crucible_thesis" "burden_type" "What form does the burden take?" "Physical object" "An artifact to destroy or protect"
+python scripts/save_state.py "./project" --answer "doc1_crucible_thesis" "fire_type" "What is the Fire's nature?" "Magical ability" "A power that corrupts with use"
+```
+
+**Nested Documents (Forge Points, Mercies):**
+```bash
+python scripts/save_state.py "./project" --answer "doc5_forge_points.fp0_ignition" "quest_crisis" "What Quest crisis emerges?" "Artifact stolen" "Enemy takes the burden"
+python scripts/save_state.py "./project" --answer "doc8_mercy_ledger.mercy_1" "recipient" "Who receives mercy?" "Enemy soldier" "A combatant who surrendered"
+```
+
+#### On Document Completion
+
+After the verification question is confirmed:
+```bash
+python scripts/save_state.py "./crucible-project" --complete <doc_num>
+```
+
+This marks the document complete and advances progress to the next document.
+
+#### Error Handling
+
+If a save fails:
+1. Retry once
+2. If still failing, inform the user but continue (answer is in context)
+3. User can manually recover using `/crucible-continue`
 
 ### Question Format
 

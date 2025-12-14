@@ -64,6 +64,57 @@ Use AskUserQuestion with these options:
 - Start fresh (begin with new premise)
 - Something else
 
+#### Resuming Planning with Saved Answers
+
+When resuming a planning session, **load and display the saved answers** so the user knows their progress was preserved.
+
+**Step 1: Load State**
+Read the state.json file to get saved answers and progress:
+```bash
+cat <project_path>/state.json
+```
+
+**Step 2: Display Progress**
+Show the user what has been answered:
+```
+Resuming your planning session...
+
+**Progress:** Document [X] of 9, Question [Y]
+**Questions Answered:** [N] of ~75
+
+**Previously saved answers:**
+- Burden: [saved value]
+- Fire: [saved value]
+- Core Bond: [saved value]
+...
+```
+
+**Step 3: Reference Previous Answers**
+When continuing questions, reference the saved answers to maintain coherence:
+- "Based on your previous answer that the burden is [saved value]..."
+- "Building on the fire type you chose ([saved value])..."
+
+**Step 4: Resume at Correct Position**
+Use the `progress.current_document` and `progress.current_question` to start from exactly where the user left off.
+
+**Example Resume Message:**
+```
+Resuming planning session for "[Project Title]"
+
+Progress: Document 3 (Fire Strand) - Question 4 of 7
+Total answered: 23 of ~75 questions
+
+Your story so far:
+- Burden: Physical object of power (an ancient artifact)
+- Fire: Magical ability that corrupts with use
+- Core Bond: Sworn friendship (battle-brother)
+- [...]
+
+Continuing with Fire Strand questions...
+```
+
+This ensures users see their work was saved and can pick up exactly where they stopped.
+
 ### Outlining Phase
 Use AskUserQuestion with these options:
 - Continue outlining (resume from current chapter)

@@ -6,6 +6,9 @@ Usage:
     python compile_documents.py <project_path>
 
 Generates all 9 planning documents plus a summary card.
+
+Answer format support:
+    Handles both old format (string values) and new format (dict with question/answer/description).
 """
 
 import json
@@ -21,33 +24,57 @@ def load_state(project_path: str) -> dict:
         return json.load(f)
 
 
+def get_answer(answers: dict, key: str, default: str = '') -> str:
+    """
+    Extract answer value from answers dict.
+
+    Handles both formats:
+    - Old format: answers[key] is a string
+    - New format: answers[key] is {"question": "...", "answer": "...", "description": "..."}
+
+    Args:
+        answers: The answers dict for a document
+        key: The answer key to look up
+        default: Default value if key not found
+
+    Returns:
+        The answer string value
+    """
+    value = answers.get(key)
+    if value is None:
+        return default
+    if isinstance(value, dict):
+        return value.get('answer', default)
+    return value
+
+
 def generate_crucible_thesis(state: dict, output_dir: str) -> str:
     """Generate the Crucible Thesis document."""
     answers = state["answers"]["doc1_crucible_thesis"]
     project = state["project"]
-    
+
     content = f"""# Crucible Thesis: {project['title']}
 
 ## The Forging Question
 
-> Can the protagonist become {answers.get('forging_become', '[what they must become]')} without becoming {answers.get('dark_mirror_represents', '[what the dark mirror represents]')}?
+> Can the protagonist become {get_answer(answers, 'forging_become', '[what they must become]')} without becoming {get_answer(answers, 'dark_mirror_represents', '[what the dark mirror represents]')}?
 
 ---
 
 ## The Three Strands
 
 ### The Burden (Quest Strand)
-**Nature:** {answers.get('burden_type', '[burden type]')}
+**Nature:** {get_answer(answers, 'burden_type', '[burden type]')}
 
 The external weight that must be carried toward resolution.
 
 ### The Fire (Fire Strand)
-**Nature:** {answers.get('fire_type', '[fire type]')}
+**Nature:** {get_answer(answers, 'fire_type', '[fire type]')}
 
 The internal power that threatens to consume.
 
 ### The Core Bond (Constellation Strand)
-**Bond Type:** {answers.get('core_bond_type', '[bond type]')}
+**Bond Type:** {get_answer(answers, 'core_bond_type', '[bond type]')}
 
 The anchor that cannot break.
 
@@ -55,8 +82,8 @@ The anchor that cannot break.
 
 ## The Dark Mirror
 
-**Connection:** {answers.get('dark_mirror_connection', '[connection]')}
-**Their Truth:** "{answers.get('antagonist_truth', '[antagonist philosophy]')}"
+**Connection:** {get_answer(answers, 'dark_mirror_connection', '[connection]')}
+**Their Truth:** "{get_answer(answers, 'antagonist_truth', '[antagonist philosophy]')}"
 
 What the protagonist could become if the forging fails.
 
@@ -64,19 +91,19 @@ What the protagonist could become if the forging fails.
 
 ## The Theme
 
-> {answers.get('theme', '[theme statement]')}
+> {get_answer(answers, 'theme', '[theme statement]')}
 
 ---
 
 ## The Surrender
 
-At the Apex, the protagonist must willingly surrender: **{answers.get('surrender_type', '[surrender]')}**
+At the Apex, the protagonist must willingly surrender: **{get_answer(answers, 'surrender_type', '[surrender]')}**
 
 ---
 
 ## The Blade's Purpose
 
-After the forging, the protagonist becomes: **{answers.get('blade_purpose', '[purpose]')}**
+After the forging, the protagonist becomes: **{get_answer(answers, 'blade_purpose', '[purpose]')}**
 
 ---
 
@@ -96,13 +123,13 @@ def generate_quest_strand(state: dict, output_dir: str) -> str:
     """Generate the Quest Strand Map."""
     answers = state["answers"]["doc2_quest_strand"]
     project = state["project"]
-    
+
     content = f"""# Quest Strand Map: {project['title']}
 
 ## The Burden
 
-**Origin:** {answers.get('burden_origin', '[origin]')}
-**Why This Protagonist:** {answers.get('why_protagonist', '[reason]')}
+**Origin:** {get_answer(answers, 'burden_origin', '[origin]')}
+**Why This Protagonist:** {get_answer(answers, 'why_protagonist', '[reason]')}
 
 ---
 
@@ -115,25 +142,25 @@ The burden is discovered/received.
 First significant obstacle; first failure.
 
 ### Movement III — Expansion
-Quest scope expands: {answers.get('quest_escalation', '[escalation]')}
+Quest scope expands: {get_answer(answers, 'quest_escalation', '[escalation]')}
 
 ### Movement IV — Convergence
 All threads converging toward resolution.
 
 ### Movement V — Resolution
-The burden ends: {answers.get('resolution_method', '[resolution]')}
+The burden ends: {get_answer(answers, 'resolution_method', '[resolution]')}
 
 ---
 
 ## The Antagonist's Stake
 
-**Why They Oppose:** {answers.get('antagonist_stake', '[stake]')}
+**Why They Oppose:** {get_answer(answers, 'antagonist_stake', '[stake]')}
 
 ---
 
 ## The Impossible Element
 
-**What Makes It Hopeless:** {answers.get('impossible_requirement', '[requirement]')}
+**What Makes It Hopeless:** {get_answer(answers, 'impossible_requirement', '[requirement]')}
 """
     
     filepath = os.path.join(output_dir, "strand-maps", "quest-strand.md")
@@ -147,24 +174,24 @@ def generate_fire_strand(state: dict, output_dir: str) -> str:
     """Generate the Fire Strand Map."""
     answers = state["answers"]["doc3_fire_strand"]
     project = state["project"]
-    
+
     content = f"""# Fire Strand Map: {project['title']}
 
 ## The Fire
 
-**Manifestation:** {answers.get('fire_manifestation', '[manifestation]')}
+**Manifestation:** {get_answer(answers, 'fire_manifestation', '[manifestation]')}
 
 ---
 
 ## The Danger
 
-**If Unmastered:** {answers.get('fire_danger', '[danger]')}
+**If Unmastered:** {get_answer(answers, 'fire_danger', '[danger]')}
 
 ---
 
 ## The Cost
 
-**Each Use Costs:** {answers.get('cost_of_use', '[cost]')}
+**Each Use Costs:** {get_answer(answers, 'cost_of_use', '[cost]')}
 
 ---
 
@@ -177,10 +204,10 @@ The Fire first manifests.
 Control is partial/unreliable.
 
 ### Movement III — Hardening
-**The Line Crossed:** {answers.get('hardening_line', '[line]')}
+**The Line Crossed:** {get_answer(answers, 'hardening_line', '[line]')}
 
 ### Movement IV — Mastery
-**How Achieved:** {answers.get('mastery_method', '[method]')}
+**How Achieved:** {get_answer(answers, 'mastery_method', '[method]')}
 
 ### Movement V — Surrender/Transformation
 The Fire is transformed or surrendered at the Apex.
@@ -189,7 +216,7 @@ The Fire is transformed or surrendered at the Apex.
 
 ## Mastery Requirements
 
-**What Mastery Requires:** {answers.get('mastery_path', '[requirements]')}
+**What Mastery Requires:** {get_answer(answers, 'mastery_path', '[requirements]')}
 """
     
     filepath = os.path.join(output_dir, "strand-maps", "fire-strand.md")
@@ -203,7 +230,7 @@ def generate_constellation_strand(state: dict, output_dir: str) -> str:
     """Generate the Constellation Strand Map."""
     answers = state["answers"]["doc4_constellation_strand"]
     project = state["project"]
-    
+
     content = f"""# Constellation Strand Map: {project['title']}
 
 ## Core Constellation
@@ -212,10 +239,10 @@ def generate_constellation_strand(state: dict, output_dir: str) -> str:
 From Crucible Thesis.
 
 ### The Faithful
-**Who:** {answers.get('faithful_companion', '[faithful]')}
+**Who:** {get_answer(answers, 'faithful_companion', '[faithful]')}
 
 ### The Sacrifice
-**Who Dies:** {answers.get('sacrifice_character', '[sacrifice]')}
+**Who Dies:** {get_answer(answers, 'sacrifice_character', '[sacrifice]')}
 
 ---
 
@@ -228,8 +255,8 @@ Core companions commit.
 First strain on relationships.
 
 ### Movement III — Expansion & Fracture
-**New Allies:** {answers.get('constellation_expansion', '[allies]')}
-**The Strain:** {answers.get('betrayal_source', '[strain]')}
+**New Allies:** {get_answer(answers, 'constellation_expansion', '[allies]')}
+**The Strain:** {get_answer(answers, 'betrayal_source', '[strain]')}
 
 ### Movement IV — Sacrifice & Anchor
 The sacrifice occurs; core bond proves unbreakable.
@@ -238,13 +265,13 @@ The sacrifice occurs; core bond proves unbreakable.
 Constellation holds through final trial.
 
 ### Coda — New Constellation
-**After the Forging:** {answers.get('constellation_fate', '[fate]')}
+**After the Forging:** {get_answer(answers, 'constellation_fate', '[fate]')}
 
 ---
 
 ## The Bond That Saves
 
-**Which Bond Anchors:** {answers.get('bond_that_saves', '[bond]')}
+**Which Bond Anchors:** {get_answer(answers, 'bond_that_saves', '[bond]')}
 """
     
     filepath = os.path.join(output_dir, "strand-maps", "constellation-strand.md")
@@ -259,7 +286,7 @@ def generate_forge_points(state: dict, output_dir: str) -> list:
     fp_answers = state["answers"]["doc5_forge_points"]
     project = state["project"]
     filepaths = []
-    
+
     forge_points = [
         ("fp0_ignition", "0", "Ignition", "I", "10%"),
         ("fp1_first", "1", "First Crucible", "II", "30%"),
@@ -267,10 +294,10 @@ def generate_forge_points(state: dict, output_dir: str) -> list:
         ("fp3_third", "3", "Third Crucible", "IV", "75%"),
         ("apex", "Apex", "Willed Surrender", "V", "85%")
     ]
-    
+
     for key, num, name, movement, percentage in forge_points:
         answers = fp_answers.get(key, {})
-        
+
         content = f"""# Forge Point {num}: {name}
 
 **Placement:** End of Movement {movement} (~{percentage})
@@ -280,13 +307,13 @@ def generate_forge_points(state: dict, output_dir: str) -> list:
 ## The Three Crises
 
 ### Quest Crisis
-{answers.get('quest_crisis', '[quest crisis]')}
+{get_answer(answers, 'quest_crisis', '[quest crisis]')}
 
 ### Fire Crisis
-{answers.get('fire_crisis', '[fire crisis]')}
+{get_answer(answers, 'fire_crisis', '[fire crisis]')}
 
 ### Constellation Crisis
-{answers.get('constellation_crisis', '[constellation crisis]')}
+{get_answer(answers, 'constellation_crisis', '[constellation crisis]')}
 
 ---
 
@@ -298,7 +325,7 @@ The protagonist cannot resolve all three.
 
 ## The Sacrifice
 
-**What Is Sacrificed:** {answers.get('sacrifice', '[sacrifice]')}
+**What Is Sacrificed:** {get_answer(answers, 'sacrifice', '[sacrifice]')}
 
 ---
 
@@ -320,24 +347,24 @@ def generate_dark_mirror(state: dict, output_dir: str) -> str:
     """Generate the Dark Mirror Profile."""
     answers = state["answers"]["doc6_dark_mirror"]
     project = state["project"]
-    
+
     content = f"""# Dark Mirror Profile: {project['title']}
 
 ## The Parallel Path
 
-**Origin Parallel:** {answers.get('origin_parallel', '[parallel]')}
+**Origin Parallel:** {get_answer(answers, 'origin_parallel', '[parallel]')}
 
 ---
 
 ## The Divergence Point
 
-**The Moment:** {answers.get('divergence', '[divergence]')}
+**The Moment:** {get_answer(answers, 'divergence', '[divergence]')}
 
 ---
 
 ## The Antagonist's Truth
 
-> "{answers.get('antagonist_want', '[philosophy]')}"
+> "{get_answer(answers, 'antagonist_want', '[philosophy]')}"
 
 **Why It's Compelling:** The truth within their worldview.
 
@@ -345,16 +372,16 @@ def generate_dark_mirror(state: dict, output_dir: str) -> str:
 
 ## The Dark Mirror's Offer (Beat 26)
 
-**The Offer:** {answers.get('compelling_offer', '[offer]')}
-**Why It's Tempting:** {answers.get('why_tempting', '[temptation]')}
-**The Hidden Cost:** {answers.get('hidden_cost', '[cost]')}
+**The Offer:** {get_answer(answers, 'compelling_offer', '[offer]')}
+**Why It's Tempting:** {get_answer(answers, 'why_tempting', '[temptation]')}
+**The Hidden Cost:** {get_answer(answers, 'hidden_cost', '[cost]')}
 
 ---
 
 ## The Defeat
 
-**How They're Defeated:** {answers.get('defeat_method', '[method]')}
-**The Antagonist's End:** {answers.get('antagonist_end', '[end]')}
+**How They're Defeated:** {get_answer(answers, 'defeat_method', '[method]')}
+**The Antagonist's End:** {get_answer(answers, 'antagonist_end', '[end]')}
 """
     
     filepath = os.path.join(output_dir, "dark-mirror-profile.md")
@@ -370,15 +397,15 @@ def generate_constellation_bible(state: dict, output_dir: str) -> str:
     project = state["project"]
     protagonist = answers.get("protagonist", {})
     characters = answers.get("characters", [])
-    
+
     content = f"""# Constellation Bible: {project['title']}
 
 ## The Protagonist
 
 ### Before the Forging
-**Unlit State:** {protagonist.get('unlit_state', '[state]')}
-**The Wound:** {protagonist.get('wound', '[wound]')}
-**The Lie:** {protagonist.get('lie', '[lie]')}
+**Unlit State:** {get_answer(protagonist, 'unlit_state', '[state]')}
+**The Wound:** {get_answer(protagonist, 'wound', '[wound]')}
+**The Lie:** {get_answer(protagonist, 'lie', '[lie]')}
 
 ### After the Forging
 **Forged State:** To be determined through the story.
@@ -392,11 +419,11 @@ def generate_constellation_bible(state: dict, output_dir: str) -> str:
 Characters and their roles in the constellation.
 
 """
-    
+
     for char in characters:
-        content += f"""### {char.get('name', 'Character')}
-**Role:** {char.get('role', '[role]')}
-**Relationship:** {char.get('relationship', '[relationship]')}
+        content += f"""### {get_answer(char, 'name', 'Character')}
+**Role:** {get_answer(char, 'role', '[role]')}
+**Relationship:** {get_answer(char, 'relationship', '[relationship]')}
 
 """
     
@@ -411,7 +438,7 @@ def generate_mercy_ledger(state: dict, output_dir: str) -> str:
     """Generate the Mercy Ledger."""
     answers = state["answers"]["doc8_mercy_ledger"]
     project = state["project"]
-    
+
     content = f"""# Mercy Ledger: {project['title']}
 
 ## Mercy Engine Overview
@@ -419,14 +446,14 @@ def generate_mercy_ledger(state: dict, output_dir: str) -> str:
 The protagonist shows mercy four times. Each costs something. Each pays off unexpectedly.
 
 """
-    
+
     mercies = [
         ("mercy_1", "1", "The Seed", "II", "IV"),
         ("mercy_2", "2", "The Investment", "III", "V"),
         ("mercy_3", "3", "The Risk", "IV", "V"),
         ("mercy_4", "4", "The Impossible Gift", "V", "V (Beat 31)")
     ]
-    
+
     for key, num, name, movement, payoff_movement in mercies:
         mercy = answers.get(key, {})
         content += f"""---
@@ -434,13 +461,13 @@ The protagonist shows mercy four times. Each costs something. Each pays off unex
 ## Mercy {num}: {name}
 
 **Movement:** {movement}
-**Recipient:** {mercy.get('recipient', '[recipient]')}
+**Recipient:** {get_answer(mercy, 'recipient', '[recipient]')}
 
-**The Merciful Act:** {mercy.get('act', '[act]')}
+**The Merciful Act:** {get_answer(mercy, 'act', '[act]')}
 
-**Immediate Cost:** {mercy.get('cost', '[cost]')}
+**Immediate Cost:** {get_answer(mercy, 'cost', '[cost]')}
 
-**Later Payoff (Movement {payoff_movement}):** {mercy.get('payoff', '[payoff]')}
+**Later Payoff (Movement {payoff_movement}):** {get_answer(mercy, 'payoff', '[payoff]')}
 
 """
     
@@ -462,44 +489,44 @@ def generate_world_forge(state: dict, output_dir: str) -> str:
     """Generate the World Forge document."""
     answers = state["answers"]["doc9_world_forge"]
     project = state["project"]
-    
+
     content = f"""# World Forge: {project['title']}
 
 ## The World's Wound
 
-**The Cosmic Problem:** {answers.get('world_wound', '[wound]')}
+**The Cosmic Problem:** {get_answer(answers, 'world_wound', '[wound]')}
 
 ---
 
 ## Power System
 
 ### Source
-**Type:** {answers.get('power_source', '[source]')}
+**Type:** {get_answer(answers, 'power_source', '[source]')}
 
 ### Limitations
-{answers.get('power_limitations', '[limitations]')}
+{get_answer(answers, 'power_limitations', '[limitations]')}
 
 ### Previous Wielders
-{answers.get('previous_wielders', '[previous wielders]')}
+{get_answer(answers, 'previous_wielders', '[previous wielders]')}
 
 ---
 
 ## World-Protagonist Mirror
 
 How the world reflects the protagonist's state:
-{answers.get('world_mirror', '[mirror description]')}
+{get_answer(answers, 'world_mirror', '[mirror description]')}
 
 ---
 
 ## Key Locations
 
-{answers.get('key_locations', '[locations]')}
+{get_answer(answers, 'key_locations', '[locations]')}
 
 ---
 
 ## History
 
-**Relevant Past:** {answers.get('history', '[history]')}
+**Relevant Past:** {get_answer(answers, 'history', '[history]')}
 """
     
     filepath = os.path.join(output_dir, "world-forge.md")
@@ -513,16 +540,16 @@ def generate_summary(state: dict, output_dir: str) -> str:
     """Generate the Crucible Summary Card."""
     project = state["project"]
     thesis = state["answers"]["doc1_crucible_thesis"]
-    
+
     content = f"""# Crucible Summary: {project['title']}
 
 ## The Forging Question
-> Can the protagonist become {thesis.get('forging_become', '[X]')} without becoming {thesis.get('dark_mirror_represents', '[Y]')}?
+> Can the protagonist become {get_answer(thesis, 'forging_become', '[X]')} without becoming {get_answer(thesis, 'dark_mirror_represents', '[Y]')}?
 
 ## Three Strands
-- **Quest:** {thesis.get('burden_type', '[burden]')}
-- **Fire:** {thesis.get('fire_type', '[fire]')}
-- **Constellation:** {thesis.get('core_bond_type', '[bond]')}
+- **Quest:** {get_answer(thesis, 'burden_type', '[burden]')}
+- **Fire:** {get_answer(thesis, 'fire_type', '[fire]')}
+- **Constellation:** {get_answer(thesis, 'core_bond_type', '[bond]')}
 
 ## Four Forge Points + Apex
 1. **Ignition:** Ordinary world destroyed
@@ -535,10 +562,10 @@ def generate_summary(state: dict, output_dir: str) -> str:
 Four costly mercies enable victory through unexpected agents.
 
 ## Theme
-> {thesis.get('theme', '[theme]')}
+> {get_answer(thesis, 'theme', '[theme]')}
 
 ## The Blade's Purpose
-{thesis.get('blade_purpose', '[purpose]')}
+{get_answer(thesis, 'blade_purpose', '[purpose]')}
 
 ---
 

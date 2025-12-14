@@ -3,12 +3,31 @@
 Save state for a Crucible Planner project.
 
 Usage:
-    python save_state.py <project_path>
+    # Save a single answer with full context
+    python save_state.py <project_path> --answer <document> <key> <question> <answer> <description>
+
+    # Update progress position
+    python save_state.py <project_path> --progress <doc_num> <question_num>
+
+    # Mark document complete
+    python save_state.py <project_path> --complete <doc_num>
+
+    # Set project scope
+    python save_state.py <project_path> --scope <target_length> <complexity>
 
 Can also be imported and used programmatically:
     from save_state import save_state, update_answer, mark_document_complete
+
+Answer storage format:
+    Each answer is stored as:
+    {
+        "question": "The full question text",
+        "answer": "The selected option label",
+        "description": "The option description"
+    }
 """
 
+import argparse
 import json
 import os
 import sys
@@ -36,45 +55,85 @@ def save_state(project_path: str, state: dict) -> None:
     print(f"✅ State saved: {state_path}")
 
 
-def update_answer(project_path: str, document: str, question: str, answer: str) -> dict:
-    """Update a single answer in the state."""
+def update_answer(project_path: str, document: str, key: str, question_text: str, answer: str, description: str) -> dict:
+    """
+    Update a single answer in the state with full context.
+
+    Args:
+        project_path: Path to the project directory
+        document: Document key (e.g., "doc1_crucible_thesis" or "doc5_forge_points.fp0_ignition")
+        key: The state key (e.g., "burden_type")
+        question_text: The full question that was asked
+        answer: The selected option label
+        description: The description of the selected option
+
+    Stores as:
+        {
+            "question": question_text,
+            "answer": answer,
+            "description": description
+        }
+    """
     state = load_state(project_path)
-    
+
+    # Create the answer object with full context
+    answer_obj = {
+        "question": question_text,
+        "answer": answer,
+        "description": description
+    }
+
     # Navigate to the right place in state
     if document.startswith("doc5_forge_points"):
         # Handle nested forge points
         parts = document.split(".")
         if len(parts) == 2:
-            state["answers"]["doc5_forge_points"][parts[1]][question] = answer
+            state["answers"]["doc5_forge_points"][parts[1]][key] = answer_obj
         else:
-            state["answers"]["doc5_forge_points"][question] = answer
+            state["answers"]["doc5_forge_points"][key] = answer_obj
     elif document.startswith("doc7_constellation_bible"):
         parts = document.split(".")
         if len(parts) == 2:
             if parts[1] == "protagonist":
-                state["answers"]["doc7_constellation_bible"]["protagonist"][question] = answer
+                state["answers"]["doc7_constellation_bible"]["protagonist"][key] = answer_obj
             else:
                 # Handle character additions
                 state["answers"]["doc7_constellation_bible"]["characters"].append({
                     "name": parts[1],
-                    question: answer
+                    key: answer_obj
                 })
         else:
-            state["answers"]["doc7_constellation_bible"][question] = answer
+            state["answers"]["doc7_constellation_bible"][key] = answer_obj
     elif document.startswith("doc8_mercy_ledger"):
         parts = document.split(".")
         if len(parts) == 2:
-            state["answers"]["doc8_mercy_ledger"][parts[1]][question] = answer
+            state["answers"]["doc8_mercy_ledger"][parts[1]][key] = answer_obj
         else:
-            state["answers"]["doc8_mercy_ledger"][question] = answer
+            state["answers"]["doc8_mercy_ledger"][key] = answer_obj
     else:
-        state["answers"][document][question] = answer
-    
+        state["answers"][document][key] = answer_obj
+
     # Update progress
     state["progress"]["total_questions_answered"] += 1
-    
+
     save_state(project_path, state)
     return state
+
+
+def get_answer_value(answer_data) -> str:
+    """
+    Extract the answer value from answer data.
+    Handles both old format (string) and new format (dict with 'answer' key).
+
+    Args:
+        answer_data: Either a string (old format) or dict (new format)
+
+    Returns:
+        The answer string value
+    """
+    if isinstance(answer_data, dict):
+        return answer_data.get("answer", "")
+    return answer_data if answer_data else ""
 
 
 def update_progress(project_path: str, document: int, question: int) -> dict:
@@ -117,15 +176,95 @@ def set_scope(project_path: str, target_length: str, complexity: str) -> dict:
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python save_state.py <project_path>")
-        print("\nThis script is primarily used programmatically.")
-        print("Import functions: save_state, update_answer, mark_document_complete")
+    parser = argparse.ArgumentParser(
+        description='Save state for a Crucible Planner project.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Save a single answer with full context
+    python save_state.py ./my-project --answer doc1_crucible_thesis burden_type "What form does the external burden take?" "Physical object" "An artifact that must be destroyed or protected"
+
+    # Save nested answer (forge points, mercies)
+    python save_state.py ./my-project --answer doc5_forge_points.fp0_ignition quest_crisis "What Quest crisis demands attention?" "Artifact stolen" "The burden is taken by enemy forces"
+
+    # Update progress position
+    python save_state.py ./my-project --progress 1 3
+
+    # Mark document complete
+    python save_state.py ./my-project --complete 1
+
+    # Set project scope
+    python save_state.py ./my-project --scope epic dual
+        """
+    )
+
+    parser.add_argument('project_path', help='Path to the Crucible project directory')
+
+    # Mutually exclusive operation modes
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '--answer',
+        nargs=5,
+        metavar=('DOCUMENT', 'KEY', 'QUESTION', 'ANSWER', 'DESCRIPTION'),
+        help='Save answer with full context: --answer <document> <key> <question_text> <answer> <description>'
+    )
+    group.add_argument(
+        '--progress',
+        nargs=2,
+        metavar=('DOC_NUM', 'QUESTION_NUM'),
+        type=int,
+        help='Update progress position: --progress <doc_num> <question_num>'
+    )
+    group.add_argument(
+        '--complete',
+        type=int,
+        metavar='DOC_NUM',
+        help='Mark a document as complete: --complete <doc_num>'
+    )
+    group.add_argument(
+        '--scope',
+        nargs=2,
+        metavar=('LENGTH', 'COMPLEXITY'),
+        help='Set project scope: --scope <standard|epic|extended> <single|dual|ensemble>'
+    )
+
+    args = parser.parse_args()
+
+    try:
+        if args.answer:
+            document, key, question_text, answer, description = args.answer
+            update_answer(args.project_path, document, key, question_text, answer, description)
+            print(f"✅ Saved: {document}.{key}")
+            print(f"   Q: {question_text[:60]}{'...' if len(question_text) > 60 else ''}")
+            print(f"   A: {answer} - {description[:40]}{'...' if len(description) > 40 else ''}")
+
+        elif args.progress:
+            doc_num, question_num = args.progress
+            update_progress(args.project_path, doc_num, question_num)
+            print(f"✅ Progress updated: Document {doc_num}, Question {question_num}")
+
+        elif args.complete:
+            mark_document_complete(args.project_path, args.complete)
+
+        elif args.scope:
+            target_length, complexity = args.scope
+            set_scope(args.project_path, target_length, complexity)
+            print(f"✅ Scope set: {target_length}, {complexity}")
+
+        else:
+            # Default: just touch the timestamp
+            state = load_state(args.project_path)
+            save_state(args.project_path, state)
+
+    except FileNotFoundError as e:
+        print(f"❌ Error: {e}", file=sys.stderr)
         sys.exit(1)
-    
-    project_path = sys.argv[1]
-    state = load_state(project_path)
-    save_state(project_path, state)
+    except KeyError as e:
+        print(f"❌ Invalid document or key: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
