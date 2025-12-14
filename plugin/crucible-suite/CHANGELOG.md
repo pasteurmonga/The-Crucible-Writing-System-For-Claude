@@ -177,6 +177,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Both detection scripts now return structure type alongside project root
 - Status report includes `structure_type` field in output
 
+## [1.0.4] - 2025-12-14
+
+### Fixed
+
+#### Hook System Overhaul
+- **Stop hook**: Changed from prompt-based to command-based
+  - Prompt hooks cannot access file system, making review checks impossible
+  - New `check_stop_conditions.py` script reads `draft-state.json` directly
+  - Properly blocks session end when bi-chapter review is due
+  - Prevents infinite loops via `stop_hook_active` check
+
+- **SubagentStop hook**: Removed entirely
+  - Prompt hooks cannot access agent output or file system
+  - Was non-functional for validating review agent completeness
+
+#### Hook Behavior
+- Stop hook now correctly enforces bi-chapter reviews
+- Exit code 2 with descriptive stderr message tells Claude exactly what to do
+- Session cannot end until required reviews are completed
+
+### Added
+
+#### Scripts
+- `check_stop_conditions.py` - Stop hook enforcement script
+  - Reads project state from `.crucible/state/draft-state.json`
+  - Checks `chapters_complete` vs `last_review_chapter`
+  - Returns exit code 2 with action instructions when blocked
+  - Returns exit code 0 when session can safely end
+
+#### Enhanced Backup Script
+- `backup_on_change.py` now includes chapter detection and review reminders:
+  - `is_chapter_file()` - Detects chapter files by name patterns
+  - `check_review_status()` - Checks if bi-chapter review is due
+  - Outputs `hookSpecificOutput.additionalContext` as soft reminder
+  - Claude receives context about pending reviews after chapter edits
+
+### Changed
+
+#### Hook Configuration
+- SessionStart timeout increased from 10s to 15s for larger projects
+- Stop hook now uses command type instead of prompt type
+- Removed SubagentStop hook from configuration
+- Updated description to reflect "review enforcement" purpose
+
+### Technical Details
+- All hooks now use command-based approach for file system access
+- PostToolUse provides soft reminders via `additionalContext`
+- Stop hook provides hard enforcement via exit code 2
+- Hybrid approach: gentle nudges + strict gates
+
 ## [Unreleased]
 
 ### Planned

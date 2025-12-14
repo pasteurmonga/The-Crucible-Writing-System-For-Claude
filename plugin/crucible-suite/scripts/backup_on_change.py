@@ -2,12 +2,14 @@
 """
 Script: backup_on_change.py
 Purpose: Incremental backup triggered by PostToolUse hook on Write|Edit
+         Also checks for chapter completion and reminds about bi-chapter reviews
 Crucible Suite Plugin
 """
 
 import sys
 import json
 import shutil
+import re
 from pathlib import Path
 from datetime import datetime
 
@@ -66,6 +68,82 @@ def should_backup_file(file_path: str) -> bool:
         pass
 
     return False
+
+
+def is_chapter_file(file_path: str) -> tuple:
+    """
+    Check if a file is a chapter file and extract chapter number.
+
+    Returns:
+        tuple: (is_chapter: bool, chapter_number: int or None)
+    """
+    if not file_path:
+        return False, None
+
+    path = Path(file_path)
+    name = path.name.lower()
+
+    # Common chapter file patterns
+    patterns = [
+        r'chapter[_-]?(\d+)',
+        r'ch[_-]?(\d+)',
+        r'(\d+)[_-]?chapter',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, name, re.IGNORECASE)
+        if match:
+            return True, int(match.group(1))
+
+    # Check if in a chapters/draft directory
+    if any(part in ['chapters', 'draft', 'manuscript'] for part in path.parts):
+        # Try to find a number in the filename
+        numbers = re.findall(r'\d+', name)
+        if numbers:
+            return True, int(numbers[0])
+
+    return False, None
+
+
+def check_review_status(project_root: Path) -> dict:
+    """
+    Check if a bi-chapter review is due.
+
+    Returns:
+        dict with review status information
+    """
+    if project_root is None:
+        return {"review_due": False}
+
+    state_dir = project_root / ".crucible" / "state"
+    draft_state_file = state_dir / "draft-state.json"
+
+    if not draft_state_file.exists():
+        return {"review_due": False}
+
+    try:
+        with open(draft_state_file, "r", encoding="utf-8") as f:
+            state = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {"review_due": False}
+
+    chapters_complete = state.get("chapters_complete", 0)
+    last_review_chapter = state.get("last_review_chapter", 0)
+
+    # Check if review is due
+    if chapters_complete >= 2 and chapters_complete % 2 == 0:
+        if last_review_chapter < chapters_complete:
+            return {
+                "review_due": True,
+                "chapters_complete": chapters_complete,
+                "review_start": chapters_complete - 1,
+                "review_end": chapters_complete
+            }
+
+    return {
+        "review_due": False,
+        "chapters_complete": chapters_complete
+    }
 
 
 def incremental_backup(file_path: str, project_root: Path = None) -> dict:
@@ -139,6 +217,18 @@ def incremental_backup(file_path: str, project_root: Path = None) -> dict:
         }
 
 
+def find_project_root(file_path: str) -> Path:
+    """Find Crucible project root from a file path."""
+    if not file_path:
+        return None
+
+    path = Path(file_path)
+    for directory in [path.parent] + list(path.parent.parents):
+        if (directory / ".crucible").exists():
+            return directory
+    return None
+
+
 def main():
     # Read hook input from stdin
     try:
@@ -166,8 +256,42 @@ def main():
         }))
         sys.exit(0)
 
+    # Perform backup
     result = incremental_backup(file_path)
-    print(json.dumps(result, indent=2))
+
+    # Check if this was a chapter file and if review is now due
+    is_chapter, chapter_num = is_chapter_file(file_path)
+    project_root = find_project_root(file_path)
+    review_status = check_review_status(project_root)
+
+    # Build output with optional review reminder
+    output = {
+        "success": result["success"],
+        "action": result.get("action", "unknown"),
+        "backup_result": result
+    }
+
+    # If a chapter file was modified and review is due, add context for Claude
+    if is_chapter and review_status.get("review_due"):
+        review_start = review_status["review_start"]
+        review_end = review_status["review_end"]
+
+        output["hookSpecificOutput"] = {
+            "hookEventName": "PostToolUse",
+            "additionalContext": (
+                f"[CRUCIBLE REMINDER] Chapter {chapter_num} was just modified. "
+                f"You have now completed {review_status['chapters_complete']} chapters. "
+                f"A bi-chapter review is due for chapters {review_start}-{review_end}. "
+                f"Please run /crucible-suite:crucible-review {review_start}-{review_end} "
+                f"before continuing to the next chapter."
+            )
+        }
+        output["review_reminder"] = {
+            "review_due": True,
+            "chapters": f"{review_start}-{review_end}"
+        }
+
+    print(json.dumps(output, indent=2))
     sys.exit(0 if result["success"] else 1)
 
 
