@@ -16,32 +16,8 @@ if sys.version_info < (3, 8):
     print("Error: Python 3.8+ required", file=sys.stderr)
     sys.exit(1)
 
-
-def find_crucible_project(start_path: Path = None) -> tuple[Path, str]:
-    """Find a Crucible project by looking for project markers.
-
-    Returns:
-        Tuple of (project_root, structure_type) where structure_type is:
-        - "dotcrucible": .crucible/ directory structure
-        - "rootlevel": state.json at project root (planner-created)
-        - None if no project found
-    """
-    if start_path is None:
-        start_path = Path.cwd()
-
-    current = Path(start_path)
-    for directory in [current] + list(current.parents):
-        # Check for .crucible directory (legacy/future structure)
-        crucible_dir = directory / ".crucible"
-        if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory, "dotcrucible"
-
-        # Check for state.json at root (planner-created structure)
-        state_file = directory / "state.json"
-        if state_file.exists():
-            return directory, "rootlevel"
-
-    return None, None
+# Import shared project detection from cross_platform
+from cross_platform import find_crucible_project_with_type
 
 
 def count_words_in_file(file_path: Path) -> int:
@@ -78,22 +54,20 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
         }
 
     # Determine paths based on structure type
+    # New unified structure: all content at project root, state in .crucible/state/
+    crucible_dir = project_root / ".crucible"
+    planning_dir = project_root / "planning"
+    outline_dir = project_root / "outline"
+    draft_dir = project_root / "draft"
+    story_bible_file = project_root / "story-bible.json"
+    backup_dir = crucible_dir / "backups"
+
     if structure_type == "dotcrucible":
-        crucible_dir = project_root / ".crucible"
-        planning_dir = crucible_dir / "planning"
-        outline_dir = crucible_dir / "outline"
-        draft_dir = crucible_dir / "draft"
         state_dir = crucible_dir / "state"
-        backup_dir = crucible_dir / "backups"
         state_file = None  # Uses individual state files in state_dir
     else:
-        # rootlevel structure (planner-created)
-        crucible_dir = project_root
-        planning_dir = project_root / "planning"
-        outline_dir = project_root / "outline"
-        draft_dir = project_root / "draft"
+        # rootlevel structure (planner-created, legacy)
         state_dir = project_root  # state.json at root
-        backup_dir = project_root / "backups"
         state_file = project_root / "state.json"
 
     report = {
@@ -166,7 +140,7 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
     planning_status = {}
 
     # Check for rootlevel state.json progress
-    if structure_type == "rootlevel" and project_state:
+    if structure_type in ("rootlevel", "legacy") and project_state:
         progress = project_state.get("progress", {})
         documents_complete = progress.get("documents_complete", [])
         current_doc = progress.get("current_document", 1)
@@ -210,19 +184,16 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
         "percentage": int((planning_complete / planning_total) * 100) if planning_total > 0 else 0,
         "documents": planning_status,
         "last_modified": get_last_modified(planning_dir),
-        "current_document": project_state.get("progress", {}).get("current_document") if structure_type == "rootlevel" else None
+        "current_document": project_state.get("progress", {}).get("current_document") if structure_type in ("rootlevel", "legacy") else None
     }
 
-    # Outline status
-    by_chapter_dir = outline_dir / "by-chapter"
-
-    outline_chapters = []
-    if by_chapter_dir.exists():
-        outline_chapters = sorted(by_chapter_dir.glob("ch*.md"))
+    # Outline status - check for outline/ directory at project root
+    master_outline = outline_dir / "master-outline.md"
+    outline_exists = outline_dir.exists() and master_outline.exists()
 
     # Try to get total from state or default
     total_chapters = 25  # Default
-    if structure_type == "rootlevel":
+    if structure_type in ("rootlevel", "legacy"):
         # Get from project_state scope
         total_chapters = project_state.get("scope", {}).get("chapters", 25) or 25
     else:
@@ -236,10 +207,10 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
                 pass
 
     report["outline"] = {
-        "complete": len(outline_chapters),
+        "complete": total_chapters if outline_exists else 0,
         "total": total_chapters,
-        "percentage": int((len(outline_chapters) / total_chapters) * 100) if total_chapters > 0 else 0,
-        "last_modified": get_last_modified(outline_dir)
+        "percentage": 100 if outline_exists else 0,
+        "last_modified": get_last_modified(outline_dir) if outline_exists else "N/A"
     }
 
     # Writing status
@@ -247,13 +218,41 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
 
     draft_chapters = []
     if chapters_dir.exists():
-        draft_chapters = sorted(chapters_dir.glob("chapter-*.md"))
+        # Look for ch01.md, ch02.md, etc. pattern
+        draft_chapters = sorted(chapters_dir.glob("ch*.md"))
+        if not draft_chapters:
+            draft_chapters = sorted(chapters_dir.glob("chapter*.md"))
     elif draft_dir.exists():
-        draft_chapters = sorted(draft_dir.glob("chapter-*.md"))
+        draft_chapters = sorted(draft_dir.glob("ch*.md"))
+        if not draft_chapters:
+            draft_chapters = sorted(draft_dir.glob("chapter*.md"))
 
+    # Prefer story-bible.json for word count and chapter count (authoritative source)
     total_words = 0
-    for chapter in draft_chapters:
-        total_words += count_words_in_file(chapter)
+    story_bible_word_count = 0
+    chapters_complete_from_bible = 0
+    if story_bible_file.exists():
+        try:
+            with open(story_bible_file, "r", encoding="utf-8") as f:
+                story_bible = json.load(f)
+                story_bible_word_count = story_bible.get("progress", {}).get("total_words", 0)
+                # Count completed chapters from story bible
+                chapters = story_bible.get("chapters", {})
+                chapters_complete_from_bible = sum(
+                    1 for k, ch in chapters.items()
+                    if not k.startswith("_") and ch.get("completed", False)
+                )
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    if story_bible_word_count > 0:
+        total_words = story_bible_word_count
+    else:
+        for chapter in draft_chapters:
+            total_words += count_words_in_file(chapter)
+
+    # Use story bible chapter count if available, otherwise file count
+    chapters_complete = chapters_complete_from_bible if chapters_complete_from_bible > 0 else len(draft_chapters)
 
     # Get target words from state
     target_words = 150000  # Default
@@ -276,7 +275,7 @@ def generate_status_report(project_root: Path, structure_type: str = None) -> di
             pass
 
     report["writing"] = {
-        "chapters_complete": len(draft_chapters),
+        "chapters_complete": chapters_complete,
         "total_chapters": total_chapters,
         "current_chapter": current_chapter,
         "current_scene": current_scene,
@@ -480,7 +479,7 @@ def main():
         except json.JSONDecodeError:
             pass
 
-    project_root, structure_type = find_crucible_project(start_path)
+    project_root, structure_type = find_crucible_project_with_type(start_path)
     report = generate_status_report(project_root, structure_type)
 
     if output_format == "text":

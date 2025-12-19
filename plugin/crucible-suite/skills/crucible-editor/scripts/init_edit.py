@@ -27,6 +27,7 @@ def init_editing_project(project_path: str, title: str, source_draft: str = None
         project_dir / "working",       # Current editing versions
         project_dir / "edited",        # Completed edited versions
         project_dir / "reports",       # Edit reports and change logs
+        project_dir / ".crucible" / "state",  # State files
     ]
 
     for directory in directories:
@@ -44,7 +45,8 @@ def init_editing_project(project_path: str, title: str, source_draft: str = None
         "edit_history": []
     }
 
-    state_file = project_dir / "edit-state.json"
+    # Save state to .crucible/state/edit-state.json
+    state_file = project_dir / ".crucible" / "state" / "edit-state.json"
     with open(state_file, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2)
 

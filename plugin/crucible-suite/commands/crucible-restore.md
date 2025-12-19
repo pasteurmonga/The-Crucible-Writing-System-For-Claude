@@ -2,7 +2,7 @@
 allowed-tools: Read, Write, Glob, Bash
 argument-hint: [timestamp] | "latest"
 description: Restore your project from a backup. Lists available backups and allows selective restoration.
-model: haiku
+model: claude-haiku-4-20250514
 ---
 
 # /crucible-restore
@@ -12,6 +12,42 @@ Restore your Crucible project from a previous backup.
 ## Execution Instructions
 
 **IMPORTANT:** When presenting backup options to the user, ALWAYS use the AskUserQuestion tool (NOT plain text A/B/C options).
+
+### Step 1: List Available Backups
+
+Run the restore script to list backups:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --list
+```
+
+This returns JSON with all available backups including timestamps, sizes, and file counts.
+
+### Step 2: Present Options to User
+
+Use AskUserQuestion to let user select which backup to restore and what scope.
+
+### Step 3: Perform Restoration
+
+For full restoration:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --restore "TIMESTAMP" --scope full
+```
+
+For selective restoration:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --restore "TIMESTAMP" --scope chapters
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --restore "TIMESTAMP" --scope planning
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --restore "TIMESTAMP" --scope state
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --restore "TIMESTAMP" --scope story-bible
+```
+
+For incremental backup restoration:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_python.sh" "${CLAUDE_PLUGIN_ROOT}/scripts/restore_project.py" --incremental --timestamp "YYYYMMDD"
+```
+
+Add `--dry-run` to preview what would be restored without making changes.
 
 ## Usage
 

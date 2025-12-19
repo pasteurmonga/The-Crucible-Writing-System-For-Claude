@@ -16,32 +16,8 @@ if sys.version_info < (3, 8):
     print("Error: Python 3.8+ required", file=sys.stderr)
     sys.exit(1)
 
-
-def find_crucible_project(start_path: Path = None) -> tuple[Path, str]:
-    """Find a Crucible project by looking for project markers.
-
-    Returns:
-        Tuple of (project_root, structure_type) where structure_type is:
-        - "dotcrucible": .crucible/ directory structure
-        - "rootlevel": state.json at project root (planner-created)
-        - None if no project found
-    """
-    if start_path is None:
-        start_path = Path.cwd()
-
-    current = Path(start_path)
-    for directory in [current] + list(current.parents):
-        # Check for .crucible directory (legacy/future structure)
-        crucible_dir = directory / ".crucible"
-        if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory, "dotcrucible"
-
-        # Check for state.json at root (planner-created structure)
-        state_file = directory / "state.json"
-        if state_file.exists():
-            return directory, "rootlevel"
-
-    return None, None
+# Import shared project detection from cross_platform
+from cross_platform import find_crucible_project_with_type
 
 
 def count_words_in_files(directory: Path, pattern: str = "*.md") -> int:
@@ -67,21 +43,23 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
         }
 
     # Determine paths based on structure type
+    # New unified structure: all content at project root, state in .crucible/state/
+    crucible_dir = project_root / ".crucible"
+    planning_dir = project_root / "planning"
+    outline_dir = project_root / "outline"
+    draft_dir = project_root / "draft"
+    story_bible_file = project_root / "story-bible.json"
+
     if structure_type == "dotcrucible":
-        crucible_dir = project_root / ".crucible"
-        planning_dir = crucible_dir / "planning"
-        outline_dir = crucible_dir / "outline"
-        draft_dir = crucible_dir / "draft"
         state_dir = crucible_dir / "state"
         root_state_file = None
+        # Also check for legacy state.json that might have been migrated
+        legacy_state_file = crucible_dir / "state" / "planning-state.json"
     else:
-        # rootlevel structure (planner-created)
-        crucible_dir = project_root
-        planning_dir = project_root / "planning"
-        outline_dir = project_root / "outline"
-        draft_dir = project_root / "draft"
+        # rootlevel structure (planner-created, legacy)
         state_dir = project_root
         root_state_file = project_root / "state.json"
+        legacy_state_file = None
 
     result = {
         "found": True,
@@ -118,7 +96,7 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
             pass
 
     # Check planning state
-    if structure_type == "rootlevel" and project_state:
+    if structure_type in ("rootlevel", "legacy") and project_state:
         # Use state.json progress for rootlevel projects
         progress = project_state.get("progress", {})
         documents_complete = progress.get("documents_complete", [])
@@ -184,16 +162,13 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
             except (json.JSONDecodeError, OSError):
                 pass
 
-    # File-based outline detection for both structures
+    # File-based outline detection - check for outline/ directory at project root
     if "outline" not in result["progress"] and outline_dir.exists():
-        by_chapter = outline_dir / "by-chapter"
-        if by_chapter.exists():
-            chapters = list(by_chapter.glob("ch*.md"))
-            if chapters:
-                result["progress"]["outline"] = {
-                    "status": "complete",
-                    "chapters_complete": len(chapters)
-                }
+        master_outline = outline_dir / "master-outline.md"
+        result["progress"]["outline"] = {
+            "status": "complete" if master_outline.exists() else "in_progress",
+            "outline_dir": str(outline_dir)
+        }
 
     # Check draft state
     if structure_type == "dotcrucible":
@@ -219,9 +194,12 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
         except (json.JSONDecodeError, OSError):
             pass
     # File-based draft detection for both structures
-    if "writing" not in result["progress"] and draft_dir.exists():
-        chapters = list(draft_dir.glob("chapter-*.md"))
-        word_count = count_words_in_files(draft_dir, "*.md")
+    chapters_dir = draft_dir / "chapters"
+    if "writing" not in result["progress"] and (draft_dir.exists() or chapters_dir.exists()):
+        # Check for chapter files in draft/chapters/ (ch01.md, ch02.md, etc.)
+        search_dir = chapters_dir if chapters_dir.exists() else draft_dir
+        chapters = list(search_dir.glob("ch*.md")) + list(search_dir.glob("chapter*.md"))
+        word_count = count_words_in_files(search_dir, "*.md")
         if chapters or word_count > 0:
             result["progress"]["writing"] = {
                 "status": "in_progress" if chapters else "not_started",
@@ -316,7 +294,7 @@ def main():
         except json.JSONDecodeError:
             pass
 
-    project_root, structure_type = find_crucible_project(start_path)
+    project_root, structure_type = find_crucible_project_with_type(start_path)
     result = detect_project_state(project_root, structure_type)
 
     print(json.dumps(result, indent=2))

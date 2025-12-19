@@ -251,3 +251,68 @@ If the answer is the latter for ANY element → flag it, ask about it, or remove
 3. **Flag inventions** — Author approves everything non-trivial
 4. **Verify constantly** — Check before, during, and after writing
 5. **Track in story bible** — Approved inventions become canon
+
+## Machine-Verifiable Markers
+
+The following markers are validated automatically by the PreToolUse hook when writing draft files.
+
+### [INVENTED: description]
+
+Use this marker to flag any invented detail for author review.
+
+**Format:** `[INVENTED: Brief description of what was invented]`
+
+**Examples:**
+```
+[INVENTED: Minor character "the fishmonger" given name "Old Chen"]
+[INVENTED: The sect's training hall described as having red pillars]
+[INVENTED: Sonny's childhood hiding spot described as behind the tannery]
+```
+
+**When to use:**
+- Named characters not in the outline or story bible
+- Named locations not in the world forge
+- Specific details about powers/magic not established
+- Dates, times, or historical events not documented
+- Organization or group names created on the fly
+
+### [VERIFY]
+
+Use this marker for uncertain details that need verification against source documents.
+
+**Format:** `[VERIFY]` placed after the uncertain detail
+
+**Example:**
+```
+The meeting happened three days after the festival [VERIFY] in the eastern courtyard.
+```
+
+**When to use:**
+- Details you believe exist in source docs but couldn't verify
+- Timeline references you're unsure about
+- Character knowledge that might be anachronistic
+- Location details that might contradict world forge
+
+### Automated Validation
+
+A PreToolUse hook (`scripts/validate_before_write.py`) scans draft files for potentially invented names or locations. When it detects patterns like:
+- `named [CapitalizedName]`
+- `called [CapitalizedName]`
+- `the [Name] Inn/Tavern/Tower/etc.`
+
+...that lack nearby `[INVENTED` or `[VERIFY` markers, it shows a soft warning reminder.
+
+**This is a reminder system, not a blocker.** The goal is to catch accidental inventions before they become canon. The write always proceeds - the warning just prompts you to review.
+
+### Story Bible Integration
+
+When you use `[INVENTED: description]` markers:
+1. The detail is flagged in the story bible as `invented_details`
+2. Author reviews during bi-chapter review or on request
+3. Approved inventions become `established_facts` with `was_invented: true`
+4. Rejected inventions must be revised in the prose
+
+Use `scripts/update_story_bible.py --invented` to record inventions:
+```bash
+python scripts/update_story_bible.py <project> --invented <chapter> <scene> "description"
+```

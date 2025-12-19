@@ -18,14 +18,29 @@ if sys.version_info < (3, 8):
     sys.exit(1)
 
 
+def find_state_file(project_dir: Path) -> Path:
+    """Find the edit state file, checking new location first then legacy."""
+    # New location: .crucible/state/edit-state.json
+    new_path = project_dir / ".crucible" / "state" / "edit-state.json"
+    if new_path.exists():
+        return new_path
+
+    # Legacy location: edit-state.json at project root
+    legacy_path = project_dir / "edit-state.json"
+    if legacy_path.exists():
+        return legacy_path
+
+    return None
+
+
 def save_editing_progress(project_path: str, chapter_num: int = None,
                          edit_type: str = None, changes: list = None):
     """Save editing progress and update tracking."""
     project_dir = Path(project_path)
 
     # Load current state
-    state_file = project_dir / "edit-state.json"
-    if not state_file.exists():
+    state_file = find_state_file(project_dir)
+    if not state_file:
         return {"success": False, "error": "Project not initialized"}
 
     with open(state_file, "r", encoding="utf-8") as f:

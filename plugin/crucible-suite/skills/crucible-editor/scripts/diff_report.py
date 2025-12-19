@@ -27,19 +27,31 @@ def generate_diff_report(project_path: str, chapter_num: int = None):
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     if chapter_num:
-        # Single chapter comparison
-        original_file = original_dir / f"chapter-{chapter_num:02d}.md"
-        edited_file = edited_dir / f"chapter-{chapter_num:02d}.md"
+        # Single chapter comparison (try ch*.md first, then chapter-*.md)
+        original_file = original_dir / f"ch{chapter_num:02d}.md"
+        edited_file = edited_dir / f"ch{chapter_num:02d}.md"
+
+        if not original_file.exists() or not edited_file.exists():
+            # Fallback to legacy pattern
+            original_file = original_dir / f"chapter-{chapter_num:02d}.md"
+            edited_file = edited_dir / f"chapter-{chapter_num:02d}.md"
 
         if not original_file.exists() or not edited_file.exists():
             return {"success": False, "error": f"Chapter {chapter_num} files not found"}
 
         chapters = [(chapter_num, original_file, edited_file)]
     else:
-        # All chapters
+        # All chapters (try ch*.md first, then chapter-*.md)
         chapters = []
-        for edited_file in sorted(edited_dir.glob("chapter-*.md")):
-            num = int(edited_file.stem.split("-")[1])
+        edited_files = sorted(edited_dir.glob("ch*.md"))
+        if not edited_files:
+            edited_files = sorted(edited_dir.glob("chapter-*.md"))
+
+        for edited_file in edited_files:
+            if edited_file.stem.startswith("ch") and not edited_file.stem.startswith("chapter"):
+                num = int(edited_file.stem.replace("ch", ""))
+            else:
+                num = int(edited_file.stem.split("-")[1])
             original_file = original_dir / edited_file.name
             if original_file.exists():
                 chapters.append((num, original_file, edited_file))
@@ -66,11 +78,11 @@ def generate_diff_report(project_path: str, chapter_num: int = None):
             print(f"Warning: Could not read {edited_file}: {e}", file=sys.stderr)
             continue
 
-        # Generate diff
+        # Generate diff (use actual file names)
         diff = list(difflib.unified_diff(
             original_lines, edited_lines,
-            fromfile=f"original/chapter-{num:02d}.md",
-            tofile=f"edited/chapter-{num:02d}.md",
+            fromfile=f"original/{original_file.name}",
+            tofile=f"edited/{edited_file.name}",
             lineterm=""
         ))
 
@@ -90,7 +102,7 @@ def generate_diff_report(project_path: str, chapter_num: int = None):
         report_content += f"## Chapter {num}\n\n"
         report_content += f"- **Lines added:** {additions}\n"
         report_content += f"- **Lines removed:** {deletions}\n"
-        report_content += f"- **Word count:** {original_words} → {edited_words} ({word_diff:+d})\n\n"
+        report_content += f"- **Word count:** {original_words} -> {edited_words} ({word_diff:+d})\n\n"
 
         if diff:
             report_content += "### Changes\n\n```diff\n"

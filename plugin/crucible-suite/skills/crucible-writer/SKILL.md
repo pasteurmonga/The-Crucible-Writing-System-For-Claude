@@ -289,21 +289,21 @@ Use AskUserQuestion for chapter approval:
 
 ### Update Story Bible
 
-After each chapter, run:
+After each chapter, update the story bible to track progress and continuity:
 
 ```bash
 python scripts/update_story_bible.py "./draft-project" --chapter X
 ```
 
-The story bible tracks:
-- Chapter-by-chapter summaries
-- Character locations/states at each chapter end
-- Established facts (names, places, rules)
-- Foreshadowing planted (awaiting payoff)
-- Foreshadowing paid off
-- Timeline progression
-- Word counts
-- **Completed chapter count** (for bi-chapter review tracking)
+**For complete command reference**, see [references/story-bible-commands.md](references/story-bible-commands.md).
+
+Key commands:
+- `--chapter X` — Update chapter summary and timeline
+- `--location` — Track new locations
+- `--relationship` — Track character relationships
+- `--mercy-act` / `--mercy-refused` — Track Mercy Engine
+- `--status X` — Check chapter status
+- `--report` — Generate continuity report
 
 ---
 
@@ -311,143 +311,14 @@ The story bible tracks:
 
 **CRITICAL:** Every 2 chapters, a comprehensive review MUST be triggered to catch issues early.
 
-### Chapter Tracking
+**For complete review workflow**, see [references/bi-chapter-review.md](references/bi-chapter-review.md).
 
-After completing each chapter, update the draft state:
+### Quick Reference
 
-```bash
-python scripts/update_draft_state.py "./draft-project" --chapter-complete X
-```
-
-The draft state file (`.crucible/state/draft-state.json`) tracks:
-```json
-{
-  "chapters_complete": 6,
-  "last_review_at_chapter": 4,
-  "review_pending": true,
-  "current_chapter": 7,
-  "current_scene": 1
-}
-```
-
-### Review Trigger Logic
-
-**After completing each chapter, check:**
-
-```
-chapters_since_last_review = chapters_complete - last_review_at_chapter
-
-IF chapters_since_last_review >= 2:
-    TRIGGER bi-chapter review
-    UPDATE last_review_at_chapter = chapters_complete
-```
-
-### Triggering the Review
-
-When a bi-chapter review is needed, present:
-
-```
-═══════════════════════════════════════
-BI-CHAPTER REVIEW REQUIRED
-═══════════════════════════════════════
-
-You've completed chapters [X] and [Y].
-Time for a quality check before continuing.
-
-This review runs 5 specialized agents:
-• voice-checker — Style consistency
-• continuity-checker — Plot/character continuity
-• outline-checker — Outline fidelity
-• timeline-checker — Chronological consistency
-• prose-checker — Craft-level feedback
-```
-
-Use AskUserQuestion:
-```json
-{
-  "questions": [
-    {
-      "header": "Review",
-      "question": "How would you like to proceed with the bi-chapter review?",
-      "options": [
-        {"label": "Run full review (Recommended)", "description": "Run all 5 review agents now"},
-        {"label": "Skip for now", "description": "Continue writing without review (not recommended)"},
-        {"label": "Selective review", "description": "Choose which agents to run"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-### Invoking Review Agents
-
-**IMPORTANT:** To invoke the review agents, use the Task tool with subagent_type for each agent:
-
-```
-Task(subagent_type="voice-checker", prompt="Review chapters X-Y for voice consistency...")
-Task(subagent_type="continuity-checker", prompt="Review chapters X-Y for continuity...")
-Task(subagent_type="outline-checker", prompt="Review chapters X-Y for outline adherence...")
-Task(subagent_type="timeline-checker", prompt="Review chapters X-Y for timeline consistency...")
-Task(subagent_type="prose-checker", prompt="Review chapters X-Y for prose quality...")
-```
-
-Launch all 5 agents in parallel for efficiency. Each agent will return a structured report.
-
-### After Review
-
-After all agents complete:
-
-1. **Compile findings** from all 5 reports
-2. **Categorize by severity** (Critical/Warning/Suggestion)
-3. **Present consolidated report** to author
-4. **Update state** with `last_review_at_chapter`
-5. **Address critical issues** before continuing
-
-```
-═══════════════════════════════════════
-BI-CHAPTER REVIEW COMPLETE
-Chapters: [X-Y]
-═══════════════════════════════════════
-
-CRITICAL ISSUES (Must Fix Before Continuing)
-─────────────────────────────────────
-[Issues from all agents that require immediate attention]
-
-WARNINGS (Should Address Soon)
-─────────────────────────────────────
-[Issues to fix during this session or next]
-
-SUGGESTIONS (Consider Later)
-─────────────────────────────────────
-[Nice-to-haves for polishing]
-
-OVERALL SCORES
-─────────────────────────────────────
-Voice Consistency: X/10
-Continuity: X/10
-Outline Fidelity: X/10
-Timeline: X/10
-Prose Quality: X/10
-```
-
-Use AskUserQuestion:
-```json
-{
-  "questions": [
-    {
-      "header": "Review Action",
-      "question": "How would you like to proceed after this review?",
-      "options": [
-        {"label": "Address issues now", "description": "Fix critical issues before continuing"},
-        {"label": "Continue writing", "description": "Note issues and continue (will return later)"},
-        {"label": "Show detailed reports", "description": "View full reports from each agent"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
+1. **Mark chapter complete**: `python scripts/save_draft.py "./draft-project" --complete-chapter X summary.txt`
+2. **Review triggers** when `chapters_complete - last_review_at_chapter >= 2`
+3. **Run 5 agents in parallel**: voice-checker, continuity-checker, outline-checker, timeline-checker, prose-checker
+4. **Address critical issues** before continuing
 
 ---
 

@@ -1,3 +1,19 @@
+---
+paths:
+  # Primary Crucible draft locations (where prose is written)
+  - draft/**/*.md
+  - draft/chapters/**/*.md
+  - manuscript/**/*.md
+  # Chapter files by naming pattern
+  - "**/chapter-*.md"
+  - "**/chapter_*.md"
+  - "**/ch-*.md"
+  - "**/ch_*.md"
+  # Scene files
+  - "**/scene-*.md"
+  - "**/scene_*.md"
+---
+
 # Anti-Hallucination Rules
 
 ## Core Principle

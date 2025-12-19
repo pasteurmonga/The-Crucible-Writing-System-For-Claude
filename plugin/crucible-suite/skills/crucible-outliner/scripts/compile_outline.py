@@ -7,20 +7,42 @@ import sys
 from datetime import datetime
 
 
+def find_state_file(path: str) -> str:
+    """Find the outline state file, checking new location first then legacy."""
+    # New location: .crucible/state/outline-state.json
+    new_path = os.path.join(path, ".crucible", "state", "outline-state.json")
+    if os.path.exists(new_path):
+        return new_path
+
+    # Legacy location: state.json at project root
+    legacy_path = os.path.join(path, "state.json")
+    if os.path.exists(legacy_path):
+        return legacy_path
+
+    return None
+
+
 def compile_outline(path: str) -> list:
     """
     Compile outline project into markdown documents.
-    
+
     Args:
         path: Project directory path
-    
+
     Returns:
         List of generated file paths
     """
-    state_path = os.path.join(path, "state.json")
+    state_path = find_state_file(path)
+    if not state_path:
+        raise FileNotFoundError(
+            f"No state file found. Checked:\n"
+            f"  - {os.path.join(path, '.crucible', 'state', 'outline-state.json')}\n"
+            f"  - {os.path.join(path, 'state.json')}"
+        )
+
     outline_dir = os.path.join(path, "outline")
     chapter_dir = os.path.join(outline_dir, "by-chapter")
-    
+
     # Load state
     with open(state_path, "r") as f:
         state = json.load(f)
@@ -33,31 +55,31 @@ def compile_outline(path: str) -> list:
     master_path = os.path.join(outline_dir, "master-outline.md")
     generate_master_outline(state, master_path)
     generated_files.append(master_path)
-    print(f"   ✅ Master Outline")
-    
+    print(f"   [OK] Master Outline")
+
     # Generate chapter summaries
     summary_path = os.path.join(outline_dir, "chapter-summaries.md")
     generate_chapter_summaries(state, summary_path)
     generated_files.append(summary_path)
-    print(f"   ✅ Chapter Summaries")
-    
+    print(f"   [OK] Chapter Summaries")
+
     # Generate scene breakdown
     scene_path = os.path.join(outline_dir, "scene-breakdown.md")
     generate_scene_breakdown(state, scene_path)
     generated_files.append(scene_path)
-    print(f"   ✅ Scene Breakdown")
-    
+    print(f"   [OK] Scene Breakdown")
+
     # Generate foreshadowing tracker
     foreshadow_path = os.path.join(outline_dir, "foreshadowing-tracker.md")
     generate_foreshadowing_tracker(state, foreshadow_path)
     generated_files.append(foreshadow_path)
-    print(f"   ✅ Foreshadowing Tracker")
-    
+    print(f"   [OK] Foreshadowing Tracker")
+
     # Generate character threads
     character_path = os.path.join(outline_dir, "character-threads.md")
     generate_character_threads(state, character_path)
     generated_files.append(character_path)
-    print(f"   ✅ Character Threads")
+    print(f"   [OK] Character Threads")
     
     # Generate individual chapter files
     for chapter in state.get("chapters", []):
@@ -67,7 +89,7 @@ def compile_outline(path: str) -> list:
         generated_files.append(ch_path)
     
     if state.get("chapters"):
-        print(f"   ✅ {len(state['chapters'])} Chapter Files")
+        print(f"   [OK] {len(state['chapters'])} Chapter Files")
     
     return generated_files
 
@@ -315,7 +337,7 @@ if __name__ == "__main__":
     
     path = sys.argv[1]
     
-    print(f"📝 Compiling outline documents...")
+    print(f"Compiling outline documents...")
     files = compile_outline(path)
     print()
-    print(f"✅ Generated {len(files)} documents in {os.path.join(path, 'outline')}")
+    print(f"[OK] Generated {len(files)} documents in {os.path.join(path, 'outline')}")

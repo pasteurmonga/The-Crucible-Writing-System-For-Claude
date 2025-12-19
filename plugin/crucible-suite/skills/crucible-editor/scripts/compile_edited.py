@@ -17,6 +17,21 @@ if sys.version_info < (3, 8):
     sys.exit(1)
 
 
+def find_state_file(project_dir: Path) -> Path:
+    """Find the edit state file, checking new location first then legacy."""
+    # New location: .crucible/state/edit-state.json
+    new_path = project_dir / ".crucible" / "state" / "edit-state.json"
+    if new_path.exists():
+        return new_path
+
+    # Legacy location: edit-state.json at project root
+    legacy_path = project_dir / "edit-state.json"
+    if legacy_path.exists():
+        return legacy_path
+
+    return None
+
+
 def compile_edited_manuscript(project_path: str, output_format: str = "md"):
     """Compile all edited chapters into a single manuscript."""
     project_dir = Path(project_path)
@@ -26,16 +41,20 @@ def compile_edited_manuscript(project_path: str, output_format: str = "md"):
         return {"success": False, "error": "No edited directory found"}
 
     # Load state for title
-    state_file = project_dir / "edit-state.json"
+    state_file = find_state_file(project_dir)
     title = "Untitled"
-    if state_file.exists():
+    if state_file and state_file.exists():
         with open(state_file, "r", encoding="utf-8") as f:
             state = json.load(f)
             title = state.get("title", "Untitled")
 
-    # Find all chapter files
-    chapter_files = sorted(edited_dir.glob("chapter-*.md"),
-                          key=lambda x: int(x.stem.split("-")[1]))
+    # Find all chapter files (support both ch*.md and chapter-*.md patterns)
+    chapter_files = sorted(edited_dir.glob("ch*.md"),
+                          key=lambda x: int(x.stem.replace("ch", "")))
+    if not chapter_files:
+        # Fallback to legacy chapter-*.md pattern
+        chapter_files = sorted(edited_dir.glob("chapter-*.md"),
+                              key=lambda x: int(x.stem.split("-")[1]))
 
     if not chapter_files:
         return {"success": False, "error": "No edited chapters found"}

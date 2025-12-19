@@ -15,6 +15,9 @@ Usage:
     # Set project scope
     python save_state.py <project_path> --scope <target_length> <complexity>
 
+    # Set project metadata (title, premise)
+    python save_state.py <project_path> --set <field> <value>
+
 Can also be imported and used programmatically:
     from save_state import save_state, update_answer, mark_document_complete
 
@@ -34,12 +37,49 @@ import sys
 from datetime import datetime
 
 
+def find_state_file(project_path: str) -> str:
+    """Find the state file, checking new location first, then legacy."""
+    # New location: .crucible/state/planning-state.json
+    new_path = os.path.join(project_path, ".crucible", "state", "planning-state.json")
+    if os.path.exists(new_path):
+        return new_path
+
+    # Legacy location: state.json at root
+    legacy_path = os.path.join(project_path, "state.json")
+    if os.path.exists(legacy_path):
+        return legacy_path
+
+    return None
+
+
+def get_state_path(project_path: str) -> str:
+    """Get the path where state should be saved (prefers new location)."""
+    # If new location exists, use it
+    new_path = os.path.join(project_path, ".crucible", "state", "planning-state.json")
+    if os.path.exists(new_path):
+        return new_path
+
+    # If legacy exists but new doesn't, use legacy (don't migrate automatically)
+    legacy_path = os.path.join(project_path, "state.json")
+    if os.path.exists(legacy_path):
+        return legacy_path
+
+    # Neither exists - use new location and create directory
+    state_dir = os.path.join(project_path, ".crucible", "state")
+    os.makedirs(state_dir, exist_ok=True)
+    return new_path
+
+
 def load_state(project_path: str) -> dict:
     """Load state from project directory."""
-    state_path = os.path.join(project_path, "state.json")
-    if not os.path.exists(state_path):
-        raise FileNotFoundError(f"No state file found at {state_path}")
-    
+    state_path = find_state_file(project_path)
+    if state_path is None:
+        raise FileNotFoundError(
+            f"No state file found. Checked:\n"
+            f"  - {os.path.join(project_path, '.crucible', 'state', 'planning-state.json')}\n"
+            f"  - {os.path.join(project_path, 'state.json')}"
+        )
+
     with open(state_path, 'r') as f:
         return json.load(f)
 
@@ -47,12 +87,12 @@ def load_state(project_path: str) -> dict:
 def save_state(project_path: str, state: dict) -> None:
     """Save state to project directory."""
     state["project"]["last_updated"] = datetime.now().isoformat()
-    
-    state_path = os.path.join(project_path, "state.json")
+
+    state_path = get_state_path(project_path)
     with open(state_path, 'w') as f:
         json.dump(state, f, indent=2)
-    
-    print(f"✅ State saved: {state_path}")
+
+    print(f"[OK] State saved: {state_path}")
 
 
 def update_answer(project_path: str, document: str, key: str, question_text: str, answer: str, description: str) -> dict:
@@ -84,7 +124,40 @@ def update_answer(project_path: str, document: str, key: str, question_text: str
     }
 
     # Navigate to the right place in state
-    if document.startswith("doc5_forge_points"):
+    if document == "scope":
+        # Handle scope as a special case - store at top level
+        # Map common keys to scope fields
+        scope_key_map = {
+            "target_length": "target_length",
+            "novel_length": "target_length",
+            "length": "target_length",
+            "complexity": "complexity",
+            "narrative_complexity": "complexity",
+            "pov": "complexity"
+        }
+        actual_key = scope_key_map.get(key, key)
+
+        # For scope, we store just the answer value, not the full object
+        state["scope"][actual_key] = answer
+
+        # If target_length is set, calculate chapters
+        if actual_key == "target_length":
+            chapters_map = {
+                "Standard": 22,
+                "standard": 22,
+                "Epic": 30,
+                "epic": 30,
+                "Extended/Series": 40,
+                "Extended": 40,
+                "extended": 40
+            }
+            state["scope"]["chapters"] = chapters_map.get(answer, 25)
+
+        # Don't increment total_questions_answered for scope
+        save_state(project_path, state)
+        return state
+
+    elif document.startswith("doc5_forge_points"):
         # Handle nested forge points
         parts = document.split(".")
         if len(parts) == 2:
@@ -153,7 +226,7 @@ def mark_document_complete(project_path: str, document_num: int) -> dict:
     state["progress"]["current_document"] = document_num + 1
     state["progress"]["current_question"] = 1
     save_state(project_path, state)
-    print(f"✅ Document {document_num} marked complete")
+    print(f"[OK] Document {document_num} marked complete")
     return state
 
 
@@ -162,7 +235,7 @@ def set_scope(project_path: str, target_length: str, complexity: str) -> dict:
     state = load_state(project_path)
     state["scope"]["target_length"] = target_length
     state["scope"]["complexity"] = complexity
-    
+
     # Calculate approximate chapters
     chapters_map = {
         "standard": 22,
@@ -170,7 +243,42 @@ def set_scope(project_path: str, target_length: str, complexity: str) -> dict:
         "extended": 40
     }
     state["scope"]["chapters"] = chapters_map.get(target_length, 25)
-    
+
+    save_state(project_path, state)
+    return state
+
+
+def set_field(project_path: str, field: str, value: str) -> dict:
+    """
+    Set a project field (title, premise, or other metadata).
+
+    Args:
+        project_path: Path to the project directory
+        field: Field name (title, premise, etc.)
+        value: Value to set
+
+    Returns:
+        Updated state dict
+    """
+    state = load_state(project_path)
+
+    # Map common field names to state locations
+    if field in ("title", "premise"):
+        state["project"][field] = value
+    elif field in ("target_length", "complexity", "chapters"):
+        state["scope"][field] = value
+        # Recalculate chapters if length changed
+        if field == "target_length":
+            chapters_map = {
+                "standard": 22, "Standard": 22,
+                "epic": 30, "Epic": 30,
+                "extended": 40, "Extended": 40
+            }
+            state["scope"]["chapters"] = chapters_map.get(value, 25)
+    else:
+        # Store in project section by default
+        state["project"][field] = value
+
     save_state(project_path, state)
     return state
 
@@ -195,6 +303,13 @@ Examples:
 
     # Set project scope
     python save_state.py ./my-project --scope epic dual
+
+    # Set project metadata (title, premise)
+    python save_state.py ./my-project --set title "The Memory Forge"
+    python save_state.py ./my-project --set premise "A blacksmith who forges weapons that steal memories"
+
+    # Set multiple fields at once
+    python save_state.py ./my-project --set title "My Novel" --set premise "The premise"
         """
     )
 
@@ -227,6 +342,13 @@ Examples:
         metavar=('LENGTH', 'COMPLEXITY'),
         help='Set project scope: --scope <standard|epic|extended> <single|dual|ensemble>'
     )
+    group.add_argument(
+        '--set',
+        nargs=2,
+        metavar=('FIELD', 'VALUE'),
+        action='append',
+        help='Set project field: --set <field> <value> (can be used multiple times)'
+    )
 
     args = parser.parse_args()
 
@@ -234,14 +356,14 @@ Examples:
         if args.answer:
             document, key, question_text, answer, description = args.answer
             update_answer(args.project_path, document, key, question_text, answer, description)
-            print(f"✅ Saved: {document}.{key}")
+            print(f"[OK] Saved: {document}.{key}")
             print(f"   Q: {question_text[:60]}{'...' if len(question_text) > 60 else ''}")
             print(f"   A: {answer} - {description[:40]}{'...' if len(description) > 40 else ''}")
 
         elif args.progress:
             doc_num, question_num = args.progress
             update_progress(args.project_path, doc_num, question_num)
-            print(f"✅ Progress updated: Document {doc_num}, Question {question_num}")
+            print(f"[OK] Progress updated: Document {doc_num}, Question {question_num}")
 
         elif args.complete:
             mark_document_complete(args.project_path, args.complete)
@@ -249,7 +371,13 @@ Examples:
         elif args.scope:
             target_length, complexity = args.scope
             set_scope(args.project_path, target_length, complexity)
-            print(f"✅ Scope set: {target_length}, {complexity}")
+            print(f"[OK] Scope set: {target_length}, {complexity}")
+
+        elif args.set:
+            # Handle multiple --set arguments
+            for field, value in args.set:
+                set_field(args.project_path, field, value)
+                print(f"[OK] Set {field}: {value[:60]}{'...' if len(value) > 60 else ''}")
 
         else:
             # Default: just touch the timestamp
@@ -257,13 +385,13 @@ Examples:
             save_state(args.project_path, state)
 
     except FileNotFoundError as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        print(f"[ERROR] {e}", file=sys.stderr)
         sys.exit(1)
     except KeyError as e:
-        print(f"❌ Invalid document or key: {e}", file=sys.stderr)
+        print(f"[ERROR] Invalid document or key: {e}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        print(f"[ERROR] {e}", file=sys.stderr)
         sys.exit(1)
 
 

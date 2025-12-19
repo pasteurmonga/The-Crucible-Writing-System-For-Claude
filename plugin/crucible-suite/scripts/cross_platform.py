@@ -9,9 +9,10 @@ import sys
 import os
 import json
 import shutil
+import base64
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 # Ensure Python 3.8+
 if sys.version_info < (3, 8):
@@ -19,9 +20,66 @@ if sys.version_info < (3, 8):
     sys.exit(1)
 
 
+def find_crucible_project_with_type(start_path: Optional[Path] = None) -> Tuple[Optional[Path], Optional[str]]:
+    """
+    Find a Crucible project by looking for project markers.
+
+    This is the CANONICAL project detection function with structure type info.
+    All Crucible scripts should use this function for consistent project detection.
+
+    Detection order (first match wins):
+    1. .crucible/ directory -> "dotcrucible" structure (standard)
+    2. state.json at root -> "rootlevel" structure (planner-created)
+    3. story-bible.json at root -> "legacy" structure
+    4. planning/ directory -> "legacy" structure
+
+    Args:
+        start_path: Directory to start searching from (default: cwd)
+
+    Returns:
+        Tuple of (project_root, structure_type) where structure_type is:
+        - "dotcrucible": .crucible/ directory structure (standard)
+        - "rootlevel": state.json at project root (planner-created projects)
+        - "legacy": story-bible.json or planning/ directory (older projects)
+        - None if no project found (both elements will be None)
+    """
+    if start_path is None:
+        env_project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+        current = Path(env_project_dir) if env_project_dir else Path.cwd()
+    else:
+        current = Path(start_path)
+
+    # Check current directory and parents
+    for directory in [current] + list(current.parents):
+        # Priority 1: .crucible directory (standard structure)
+        crucible_dir = directory / ".crucible"
+        if crucible_dir.exists() and crucible_dir.is_dir():
+            return directory, "dotcrucible"
+
+        # Priority 2: state.json at root (planner-created structure)
+        state_file = directory / "state.json"
+        if state_file.exists():
+            return directory, "rootlevel"
+
+        # Priority 3: story-bible.json (legacy/transition structure)
+        story_bible = directory / "story-bible.json"
+        if story_bible.exists():
+            return directory, "legacy"
+
+        # Priority 4: planning/ directory (legacy structure)
+        planning_dir = directory / "planning"
+        if planning_dir.exists() and planning_dir.is_dir():
+            return directory, "legacy"
+
+    return None, None
+
+
 def find_crucible_project(start_path: Optional[Path] = None) -> Optional[Path]:
     """
-    Find a Crucible project by looking for .crucible directory.
+    Find a Crucible project by looking for project markers.
+
+    This is a convenience wrapper that returns only the path.
+    For structure type information, use find_crucible_project_with_type().
 
     Args:
         start_path: Directory to start searching from (default: cwd)
@@ -29,18 +87,8 @@ def find_crucible_project(start_path: Optional[Path] = None) -> Optional[Path]:
     Returns:
         Path to project root or None if not found
     """
-    if start_path is None:
-        current = Path.cwd()
-    else:
-        current = Path(start_path)
-
-    # Check current directory and parents
-    for directory in [current] + list(current.parents):
-        crucible_dir = directory / ".crucible"
-        if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory
-
-    return None
+    project_root, _ = find_crucible_project_with_type(start_path)
+    return project_root
 
 
 # Alias for backward compatibility
@@ -86,7 +134,12 @@ def safe_read_json(path: Path) -> Optional[Dict[str, Any]]:
 
 
 def safe_write_json(path: Path, data: Dict[str, Any]) -> bool:
-    """Safely write a JSON file with proper error handling."""
+    """
+    Safely write a JSON file with proper error handling.
+
+    Uses atomic write pattern: write to temp file, then rename.
+    Handles Windows-specific issues where rename fails if target exists.
+    """
     try:
         # Ensure parent directory exists
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -96,11 +149,28 @@ def safe_write_json(path: Path, data: Dict[str, Any]) -> bool:
         with open(temp_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
-        # Rename temp to final
-        temp_path.replace(path)
+        # Rename temp to final - handle Windows atomicity issues
+        try:
+            temp_path.replace(path)
+        except OSError:
+            # On Windows, replace() fails if target exists and is locked
+            # Fall back to delete-then-move pattern
+            if sys.platform == "win32":
+                try:
+                    path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                shutil.move(str(temp_path), str(path))
+            else:
+                raise
         return True
     except OSError as e:
         print(f"Error writing {path}: {e}", file=sys.stderr)
+        # Clean up temp file if it exists
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
         return False
 
 
@@ -179,6 +249,76 @@ def backup_file(source: Path, backup_dir: Path) -> Optional[Path]:
         return None
 
 
+def encode_path_b64(path: str) -> str:
+    """
+    Encode a relative path using URL-safe base64.
+
+    This creates a reversible, filesystem-safe encoding for backup filenames.
+    Unlike underscore-based flattening, this encoding is unambiguous and
+    can always be decoded back to the original path.
+
+    Args:
+        path: A relative path string (e.g., "draft/chapter-1.md")
+
+    Returns:
+        URL-safe base64 encoded string without padding (e.g., "ZHJhZnQvY2hhcHRlci0xLm1k")
+
+    Example:
+        >>> encode_path_b64("draft/chapter-1.md")
+        'ZHJhZnQvY2hhcHRlci0xLm1k'
+    """
+    return base64.urlsafe_b64encode(path.encode("utf-8")).decode("ascii").rstrip("=")
+
+
+def decode_path_b64(encoded: str) -> Optional[str]:
+    """
+    Decode a URL-safe base64 encoded path back to the original.
+
+    Args:
+        encoded: URL-safe base64 encoded string (with or without padding)
+
+    Returns:
+        Original path string, or None if decoding fails
+
+    Example:
+        >>> decode_path_b64("ZHJhZnQvY2hhcHRlci0xLm1k")
+        'draft/chapter-1.md'
+    """
+    try:
+        # Add back padding if needed (base64 requires length to be multiple of 4)
+        padding = 4 - (len(encoded) % 4)
+        if padding != 4:
+            encoded = encoded + ("=" * padding)
+        return base64.urlsafe_b64decode(encoded.encode("ascii")).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return None
+
+
+def is_base64_encoded_path(s: str) -> bool:
+    """
+    Check if a string looks like a base64-encoded path.
+
+    Used to distinguish between legacy underscore-encoded backup filenames
+    and new base64-encoded filenames for backward compatibility.
+
+    Args:
+        s: String to check (typically a backup filename without timestamp prefix)
+
+    Returns:
+        True if the string matches base64url pattern (alphanumeric + - + _ only,
+        no path separators or dots except possibly at the very end)
+    """
+    # Base64url uses: A-Z, a-z, 0-9, -, _ (and optionally = for padding)
+    # Legacy underscore encoding would have dots (.) for file extensions
+    # and often readable words
+    import re
+    # If it contains a dot followed by common extension, it's likely legacy
+    if re.search(r'\.(md|json|txt|py)$', s, re.IGNORECASE):
+        return False
+    # If it matches pure base64url pattern, it's likely encoded
+    return bool(re.match(r'^[A-Za-z0-9_-]+$', s))
+
+
 def get_project_state(project_root: Path) -> Optional[Dict[str, Any]]:
     """Load the current project state from various state files."""
     state = {
@@ -226,9 +366,110 @@ def format_output(data: Dict[str, Any], for_hook: bool = False) -> str:
     return json.dumps(data, indent=2, ensure_ascii=False)
 
 
+def get_python_command() -> str:
+    """
+    Get the appropriate Python command for the current platform.
+
+    On Windows, 'python' is typically the correct command.
+    On Unix-like systems, 'python3' is preferred to avoid Python 2.
+
+    Returns:
+        "python" on Windows, "python3" on Unix/Linux/macOS
+    """
+    if sys.platform == "win32":
+        return "python"
+    else:
+        return "python3"
+
+
+def get_backup_directory(project_root: Path, structure_type: str) -> Path:
+    """
+    Get the backup directory path based on project structure type.
+
+    Args:
+        project_root: Path to the project root
+        structure_type: One of "dotcrucible", "rootlevel", or "legacy"
+
+    Returns:
+        Path to the backup directory (creates it if needed)
+
+    For dotcrucible: .crucible/backups/
+    For rootlevel/legacy: .crucible-backups/ (at project root to avoid conflicts)
+    """
+    if structure_type == "dotcrucible":
+        backup_dir = project_root / ".crucible" / "backups"
+    else:
+        # For rootlevel and legacy, use a separate hidden directory
+        # to avoid mixing with project files
+        backup_dir = project_root / ".crucible-backups"
+
+    ensure_directory(backup_dir)
+    return backup_dir
+
+
+def get_backup_paths_for_structure(project_root: Path, structure_type: str) -> Dict[str, List[Path]]:
+    """
+    Get the directories and files to backup based on project structure type.
+
+    Args:
+        project_root: Path to the project root
+        structure_type: One of "dotcrucible", "rootlevel", or "legacy"
+
+    Returns:
+        Dict with "dirs" and "files" lists of paths to backup
+    """
+    dirs: List[Path] = []
+    files: List[Path] = []
+
+    # Common directories across all structures
+    common_dirs = ["planning", "outline", "draft", "manuscript", "chapters"]
+    for dirname in common_dirs:
+        dir_path = project_root / dirname
+        if dir_path.exists():
+            dirs.append(dir_path)
+
+    # Common files across all structures
+    common_files = ["CLAUDE.md", "story-bible.json", "style-profile.json"]
+    for filename in common_files:
+        file_path = project_root / filename
+        if file_path.exists():
+            files.append(file_path)
+
+    # Structure-specific paths
+    if structure_type == "dotcrucible":
+        crucible_dir = project_root / ".crucible"
+        if crucible_dir.exists():
+            # State directory
+            state_dir = crucible_dir / "state"
+            if state_dir.exists():
+                dirs.append(state_dir)
+            # Story bible markdown files
+            story_bible_dir = crucible_dir / "story-bible"
+            if story_bible_dir.exists():
+                dirs.append(story_bible_dir)
+            # Incremental backups (include in full backups)
+            incremental_dir = crucible_dir / "backups" / "incremental"
+            if incremental_dir.exists():
+                dirs.append(incremental_dir)
+
+    elif structure_type == "rootlevel":
+        # state.json is at project root
+        state_file = project_root / "state.json"
+        if state_file.exists():
+            files.append(state_file)
+
+    elif structure_type == "legacy":
+        # Legacy may have various configurations
+        # Already handled by common dirs/files
+        pass
+
+    return {"dirs": dirs, "files": files}
+
+
 # Module-level exports
 __all__ = [
     "find_crucible_project",
+    "find_crucible_project_with_type",
     "get_crucible_root",
     "get_plugin_root",
     "ensure_directory",
@@ -241,6 +482,12 @@ __all__ = [
     "extract_title_from_claude_md",
     "find_files",
     "backup_file",
+    "encode_path_b64",
+    "decode_path_b64",
+    "is_base64_encoded_path",
     "get_project_state",
-    "format_output"
+    "format_output",
+    "get_python_command",
+    "get_backup_directory",
+    "get_backup_paths_for_structure"
 ]

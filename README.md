@@ -202,4 +202,4 @@ MIT License — See [LICENSE](plugin/crucible-suite/LICENSE) for details.
 
 **Built for fantasy writers who want to tell bigger stories.**
 
-*Crucible Suite v1.0.1*
+*Crucible Suite v1.0.5*

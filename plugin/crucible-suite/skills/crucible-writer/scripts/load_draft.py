@@ -9,6 +9,8 @@ import json
 import sys
 from pathlib import Path
 
+from update_story_bible import ensure_schema
+
 # Ensure Python 3.8+
 if sys.version_info < (3, 8):
     print("Error: Python 3.8+ required", file=sys.stderr)
@@ -65,60 +67,56 @@ def load_draft(project_path: Path) -> dict:
             "error": "No draft project found"
         }
 
-    # Try multiple possible locations for state files
-    possible_locations = [
-        project_path,  # Direct project directory
-        project_path / ".crucible",  # Inside .crucible
-    ]
+    # Canonical file locations (as created by init_draft.py):
+    # - story-bible.json: project root
+    # - style-profile.json: project root
+    # - draft-state.json: .crucible/state/
+    # - project-state.json: project root (legacy)
 
     story_bible = None
     style_profile = None
     project_state = None
     draft_state = None
 
-    # Find and load story-bible.json
-    for loc in possible_locations:
-        bible_path = loc / "story-bible.json"
-        if bible_path.exists():
-            story_bible = load_json_file(bible_path)
-            break
+    # Load story-bible.json from project root (canonical location)
+    bible_path = project_path / "story-bible.json"
+    if bible_path.exists():
+        story_bible = load_json_file(bible_path)
+        if story_bible:
+            story_bible = ensure_schema(story_bible)
 
-    # Find and load style-profile.json
-    for loc in possible_locations:
-        style_path = loc / "style-profile.json"
+    # Load style-profile.json - check project root and style subdirectory
+    style_path = project_path / "style-profile.json"
+    if style_path.exists():
+        style_profile = load_json_file(style_path)
+    else:
+        # Also check .crucible/style/ subdirectory
+        style_path = project_path / ".crucible" / "style" / "style-profile.json"
         if style_path.exists():
             style_profile = load_json_file(style_path)
-            break
-        # Also check style subdirectory
-        style_path = loc / "style" / "style-profile.json"
-        if style_path.exists():
-            style_profile = load_json_file(style_path)
-            break
 
-    # Find and load project-state.json
-    for loc in possible_locations:
-        state_path = loc / "project-state.json"
-        if state_path.exists():
-            project_state = load_json_file(state_path)
-            break
+    # Load project-state.json (legacy location at project root)
+    state_path = project_path / "project-state.json"
+    if state_path.exists():
+        project_state = load_json_file(state_path)
 
-    # Find and load draft-state.json (for bi-chapter review tracking)
-    for loc in possible_locations:
-        draft_state_path = loc / "state" / "draft-state.json"
-        if draft_state_path.exists():
-            draft_state = load_json_file(draft_state_path)
-            break
-        draft_state_path = loc / "draft-state.json"
-        if draft_state_path.exists():
-            draft_state = load_json_file(draft_state_path)
-            break
+    # Load draft-state.json (for bi-chapter review tracking)
+    # Canonical location: .crucible/state/draft-state.json
+    draft_state_path = project_path / ".crucible" / "state" / "draft-state.json"
+    if draft_state_path.exists():
+        draft_state = load_json_file(draft_state_path)
+    else:
+        # Legacy fallback: project-state.json at root (older projects)
+        legacy_path = project_path / "project-state.json"
+        if legacy_path.exists():
+            draft_state = load_json_file(legacy_path)
 
     # Check if we found essential files
     if story_bible is None and project_state is None:
         return {
             "success": False,
             "error": "No story-bible.json or project-state.json found",
-            "searched_paths": [str(p) for p in possible_locations]
+            "searched_paths": [str(project_path)]
         }
 
     # Extract progress information
@@ -208,11 +206,11 @@ def format_status_text(status: dict) -> str:
     prog = status["progress"]
 
     lines = [
-        "═" * 50,
+        "=" * 50,
         f"DRAFT PROJECT LOADED",
-        "═" * 50,
+        "=" * 50,
         "",
-        f"📚 {status['title']}",
+        f"{status['title']}",
     ]
 
     if status.get("series"):
@@ -221,30 +219,30 @@ def format_status_text(status: dict) -> str:
     lines.extend([
         "",
         f"PROGRESS",
-        "─" * 50,
+        "-" * 50,
         f"Current position: Chapter {prog['current_chapter']}, Scene {prog['current_scene']}",
         f"Chapters complete: {prog['chapters_complete']} / {status['target_chapters']}",
         f"Word count: {prog['total_words']:,} / {status['target_words']:,}",
         f"Status: {prog['status']}",
         "",
         f"SETUP STATUS",
-        "─" * 50,
-        f"Style captured: {'✓' if status['style_captured'] else '✗'}",
-        f"Outline loaded: {'✓' if status['outline_loaded'] else '✗'}",
+        "-" * 50,
+        f"Style captured: {'[x]' if status['style_captured'] else '[ ]'}",
+        f"Outline loaded: {'[x]' if status['outline_loaded'] else '[ ]'}",
         "",
         f"BI-CHAPTER REVIEW",
-        "─" * 50,
+        "-" * 50,
     ])
 
     if status["review_pending"]:
-        lines.append("⚠️  REVIEW PENDING — Run /crucible-suite:crucible-review before continuing")
+        lines.append("[WARN] REVIEW PENDING - Run /crucible-suite:crucible-review before continuing")
     else:
         lines.append(f"Chapters until next review: {status['chapters_until_review']}")
         lines.append(f"Last review at chapter: {status['last_review_at_chapter']}")
 
     lines.extend([
         "",
-        "═" * 50,
+        "=" * 50,
         "",
         "Ready to continue. Next steps:",
     ])
@@ -254,9 +252,9 @@ def format_status_text(status: dict) -> str:
     if not status["outline_loaded"]:
         lines.append("  2. Load your chapter outline")
     if status["review_pending"]:
-        lines.append("  → Run bi-chapter review first")
+        lines.append("  -> Run bi-chapter review first")
     else:
-        lines.append(f"  → Continue writing Chapter {prog['current_chapter']}, Scene {prog['current_scene']}")
+        lines.append(f"  -> Continue writing Chapter {prog['current_chapter']}, Scene {prog['current_scene']}")
 
     return "\n".join(lines)
 

@@ -18,6 +18,13 @@ if sys.version_info < (3, 8):
     print("Error: Python 3.8+ required", file=sys.stderr)
     sys.exit(1)
 
+# Import shared utilities from cross_platform
+from cross_platform import (
+    find_crucible_project_with_type,
+    get_backup_directory,
+    encode_path_b64
+)
+
 
 def get_timestamp():
     return datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -44,11 +51,16 @@ def should_backup_file(file_path: str) -> bool:
         return True
 
     # Backup markdown files in common Crucible directories
-    crucible_dirs = ["draft", "chapter", "planning", "outline", "story-bible", "style"]
+    crucible_dirs = ["draft", "chapters", "planning", "manuscript"]
     if path.suffix == ".md":
         for dir_name in crucible_dirs:
             if dir_name in path.parts:
                 return True
+
+    # Backup key JSON files at project root
+    key_json_files = ["story-bible.json", "style-profile.json"]
+    if path.name in key_json_files:
+        return True
 
     # Backup JSON state files
     if path.suffix == ".json" and "state" in path.parts:
@@ -109,6 +121,15 @@ def check_review_status(project_root: Path) -> dict:
     """
     Check if a bi-chapter review is due.
 
+    NOTE: This logic must stay in sync with sync_draft_state() in
+    skills/crucible-writer/scripts/update_story_bible.py, which is the
+    CANONICAL SOURCE for bi-chapter review logic. That function is used
+    when chapters are completed via save_draft.py. This function is used
+    by the backup hook to remind users during active writing.
+
+    The review trigger rule: A review is needed when 2 or more chapters
+    have been completed since the last review.
+
     Returns:
         dict with review status information
     """
@@ -128,17 +149,19 @@ def check_review_status(project_root: Path) -> dict:
         return {"review_due": False}
 
     chapters_complete = state.get("chapters_complete", 0)
-    last_review_chapter = state.get("last_review_chapter", 0)
+    last_review_chapter = state.get("last_review_at_chapter", 0)
 
-    # Check if review is due
-    if chapters_complete >= 2 and chapters_complete % 2 == 0:
-        if last_review_chapter < chapters_complete:
-            return {
-                "review_due": True,
-                "chapters_complete": chapters_complete,
-                "review_start": chapters_complete - 1,
-                "review_end": chapters_complete
-            }
+    # Check if review is due: trigger when 2+ chapters since last review
+    # This matches the logic in update_story_bible.py:sync_draft_state()
+    chapters_since_review = chapters_complete - last_review_chapter
+
+    if chapters_since_review >= 2:
+        return {
+            "review_due": True,
+            "chapters_complete": chapters_complete,
+            "review_start": last_review_chapter + 1,
+            "review_end": chapters_complete
+        }
 
     return {
         "review_due": False,
@@ -146,7 +169,7 @@ def check_review_status(project_root: Path) -> dict:
     }
 
 
-def incremental_backup(file_path: str, project_root: Path = None) -> dict:
+def incremental_backup(file_path: str, project_root: Path = None, structure_type: str = None) -> dict:
     """Create an incremental backup of a changed file."""
 
     if not should_backup_file(file_path):
@@ -164,13 +187,13 @@ def incremental_backup(file_path: str, project_root: Path = None) -> dict:
             "reason": "File does not exist (may be new)"
         }
 
-    # Find project root
-    if project_root is None:
-        current = source.parent
-        for directory in [current] + list(current.parents):
-            if (directory / ".crucible").exists():
-                project_root = directory
-                break
+    # Find project root and structure type using shared detection logic
+    if project_root is None or structure_type is None:
+        detected_root, detected_type = find_crucible_project_with_type(source.parent)
+        if project_root is None:
+            project_root = detected_root
+        if structure_type is None:
+            structure_type = detected_type
 
     if project_root is None:
         return {
@@ -178,8 +201,13 @@ def incremental_backup(file_path: str, project_root: Path = None) -> dict:
             "error": "Could not find Crucible project root"
         }
 
-    # Set up incremental backup directory
-    backup_dir = project_root / ".crucible" / "backups" / "incremental"
+    # Default to dotcrucible if type detection failed
+    if structure_type is None:
+        structure_type = "dotcrucible"
+
+    # Set up incremental backup directory based on structure type
+    backup_base = get_backup_directory(project_root, structure_type)
+    backup_dir = backup_base / "incremental"
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     # Create backup with timestamp
@@ -189,7 +217,9 @@ def incremental_backup(file_path: str, project_root: Path = None) -> dict:
         relative_path = source.relative_to(project_root)
     except ValueError:
         relative_path = Path(source.name)
-    safe_name = str(relative_path).replace("/", "_").replace("\\", "_")
+    # Use base64url encoding for reversible, unambiguous path encoding
+    # This replaces the old underscore-based flattening which was ambiguous
+    safe_name = encode_path_b64(str(relative_path))
     backup_name = f"{timestamp}-{safe_name}"
     backup_path = backup_dir / backup_name
 
@@ -197,10 +227,19 @@ def incremental_backup(file_path: str, project_root: Path = None) -> dict:
         shutil.copy2(source, backup_path)
 
         # Clean up old incremental backups (keep last 100)
-        all_backups = sorted(backup_dir.glob("*"), key=lambda x: x.stat().st_mtime)
-        if len(all_backups) > 100:
-            for old_backup in all_backups[:-100]:
-                old_backup.unlink()
+        # Wrap in try/except to handle permission errors or file-in-use on Windows
+        try:
+            all_backups = sorted(backup_dir.glob("*"), key=lambda x: x.stat().st_mtime)
+            if len(all_backups) > 100:
+                for old_backup in all_backups[:-100]:
+                    try:
+                        old_backup.unlink()
+                    except OSError:
+                        # Skip files that can't be deleted (in use, permission denied)
+                        pass
+        except OSError:
+            # If we can't list/stat backups, skip cleanup but don't fail the backup
+            pass
 
         return {
             "success": True,
@@ -217,23 +256,20 @@ def incremental_backup(file_path: str, project_root: Path = None) -> dict:
         }
 
 
-def find_project_root(file_path: str) -> Path:
-    """Find Crucible project root from a file path."""
-    if not file_path:
-        return None
-
-    path = Path(file_path)
-    for directory in [path.parent] + list(path.parent.parents):
-        if (directory / ".crucible").exists():
-            return directory
-    return None
-
-
 def main():
+    """
+    Main entry point for PostToolUse hook.
+
+    Output format follows official Claude Code hooks specification (hooks.md):
+    - Exit 0 with hookSpecificOutput.additionalContext when context needed
+    - Exit 0 with empty JSON {} when no context needed
+    - Exit 2 with stderr message to block (not used here - backups are non-blocking)
+    """
     # Read hook input from stdin
     try:
         input_data = json.load(sys.stdin)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, OSError):
+        # Handle both JSON parse errors and stdin read errors
         input_data = {}
 
     # Extract file path from hook data
@@ -242,34 +278,35 @@ def main():
 
     tool_input = input_data.get("tool_input", {})
     if isinstance(tool_input, dict):
-        file_path = tool_input.get("file_path") or tool_input.get("path")
+        file_path = tool_input.get("file_path")
 
     # Also check direct input
     if not file_path:
         file_path = input_data.get("file_path")
 
     if not file_path:
-        print(json.dumps({
-            "success": True,
-            "action": "skipped",
-            "reason": "No file path in hook input"
-        }))
+        # No file path - nothing to do, exit silently with empty output
+        print("{}")
         sys.exit(0)
 
-    # Perform backup
+    # Perform backup (errors are logged internally, non-blocking)
     result = incremental_backup(file_path)
 
     # Check if this was a chapter file and if review is now due
-    is_chapter, chapter_num = is_chapter_file(file_path)
-    project_root = find_project_root(file_path)
-    review_status = check_review_status(project_root)
+    try:
+        is_chapter, chapter_num = is_chapter_file(file_path)
+        file_parent = Path(file_path).parent if file_path else None
+        project_root, _ = find_crucible_project_with_type(file_parent)
+        review_status = check_review_status(project_root)
+    except OSError:
+        # Handle filesystem errors gracefully
+        is_chapter = False
+        chapter_num = None
+        review_status = {"review_due": False}
 
-    # Build output with optional review reminder
-    output = {
-        "success": result["success"],
-        "action": result.get("action", "unknown"),
-        "backup_result": result
-    }
+    # Build spec-compliant output: ONLY hookSpecificOutput when context is needed
+    # Per hooks.md, PostToolUse additionalContext adds info for Claude to consider
+    output = {}
 
     # If a chapter file was modified and review is due, add context for Claude
     if is_chapter and review_status.get("review_due"):
@@ -286,13 +323,9 @@ def main():
                 f"before continuing to the next chapter."
             )
         }
-        output["review_reminder"] = {
-            "review_due": True,
-            "chapters": f"{review_start}-{review_end}"
-        }
 
-    print(json.dumps(output, indent=2))
-    sys.exit(0 if result["success"] else 1)
+    print(json.dumps(output, indent=2) if output else "{}")
+    sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 name: continuity-checker
 description: Tracks plot and character continuity across chapters. Use PROACTIVELY during bi-chapter reviews to catch continuity errors before they compound.
 tools: Read, Grep, Glob
-model: haiku
+model: inherit
 permissionMode: plan
 skills: crucible-writer
 ---
@@ -17,14 +17,19 @@ Check chapters for continuity with the story bible, previous chapters, and plann
 
 ## Required Context
 
-Before analysis, load:
-1. **Story bible** from `.crucible/story-bible/`
-   - `characters.md` - Character details
-   - `places.md` - Location details
-   - `items.md` - Important object details
-2. **Chapter summaries** from previous chapters
-3. **Planning documents** (as needed for verification)
-4. **Chapters to review** (specified in task)
+**Use the file paths provided in the task prompt.** The prompt will include absolute paths for:
+
+1. **Story bible** - JSON file containing:
+   - `character_states` - Character details and current states
+   - `locations` - Location details
+   - `established_facts` - All facts established in the narrative
+   - `foreshadowing` - Plants and payoffs tracking
+   - `chapters` - Chapter summaries and final states
+2. **Chapter summaries** - Found in the story bible JSON under `chapters[N].summary`
+3. **Planning documents** - Directory for verification as needed
+4. **Chapters to review** - The specific chapter files to analyze
+
+Read the files using the absolute paths provided. Do not search for files - use the paths given.
 
 ## Analysis Process
 

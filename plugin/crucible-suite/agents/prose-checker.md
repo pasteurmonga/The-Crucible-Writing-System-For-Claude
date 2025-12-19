@@ -1,8 +1,8 @@
 ---
 name: prose-checker
-description: Provides craft-level feedback on prose quality. Use during bi-chapter reviews for line-level writing improvement suggestions.
+description: Provides craft-level feedback on prose quality. Use PROACTIVELY during bi-chapter reviews for line-level writing improvement suggestions.
 tools: Read, Grep, Glob
-model: haiku
+model: inherit
 permissionMode: plan
 skills: crucible-writer, crucible-editor
 ---
@@ -17,10 +17,12 @@ Analyze prose for craft elements including pacing, show vs tell balance, dialogu
 
 ## Required Context
 
-Before analysis, load:
-1. **Style profile** from `.crucible/style/style-profile.json`
-2. **Genre conventions** from the project settings
-3. **Chapters to review** (specified in task)
+**Use the file paths provided in the task prompt.** The prompt will include absolute paths for:
+
+1. **Style profile** - JSON file containing the author's style preferences and `genre_conventions` field
+2. **Chapters to review** - The specific chapter files to analyze
+
+Read the files using the absolute paths provided. Do not search for files - use the paths given.
 
 ## Analysis Process
 

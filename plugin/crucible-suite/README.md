@@ -134,24 +134,33 @@ When you start a Crucible project, it creates:
 ```
 your-project/
 ├── CLAUDE.md                    # Project memory
+├── story-bible.json             # Continuity tracking (JSON)
+├── style-profile.json           # Author voice profile
+├── outline/                     # Chapter outlines
+│   ├── master-outline.md
+│   ├── chapter-summaries.md
+│   ├── scene-breakdown.md
+│   ├── foreshadowing-tracker.md
+│   ├── character-threads.md
+│   └── by-chapter/
+├── planning/                    # Planning documents
+│   ├── crucible-thesis.md
+│   ├── strand-maps/
+│   ├── forge-points/
+│   ├── dark-mirror-profile.md
+│   ├── constellation-bible.md
+│   ├── mercy-ledger.md
+│   └── world-forge.md
+├── draft/                       # Written prose
+│   └── chapters/
+├── manuscript/                  # Compiled output
 └── .crucible/
-    ├── planning/               # Planning documents
-    │   ├── crucible-thesis.md
-    │   ├── strand-maps/
-    │   ├── forge-points/
-    │   ├── dark-mirror-profile.md
-    │   ├── constellation-bible.md
-    │   ├── mercy-ledger.md
-    │   └── world-forge.md
-    ├── outline/                # Chapter outlines
-    │   ├── master-outline.md
-    │   └── by-chapter/
-    ├── draft/                  # Written prose
-    │   └── chapters/
-    ├── story-bible/            # Continuity tracking
-    ├── style/                  # Voice sample and profile
-    ├── state/                  # Session state files
-    └── backups/                # Automatic backups
+    ├── state/                   # Session state files
+    │   ├── planning-state.json
+    │   ├── outline-state.json
+    │   ├── draft-state.json
+    │   └── edit-state.json
+    └── backups/                 # Automatic backups
 ```
 
 ## Requirements
@@ -252,4 +261,4 @@ Built with ❤️ for fantasy writers who want to tell bigger stories.
 
 ---
 
-*Version 1.0.1 • [Changelog](CHANGELOG.md) • [License](LICENSE)*
+*Version 1.0.5 • [Changelog](CHANGELOG.md) • [License](LICENSE)*

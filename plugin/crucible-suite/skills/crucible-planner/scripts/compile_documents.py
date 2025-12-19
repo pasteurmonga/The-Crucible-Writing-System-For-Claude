@@ -18,10 +18,24 @@ from datetime import datetime
 
 
 def load_state(project_path: str) -> dict:
-    """Load state from project directory."""
-    state_path = os.path.join(project_path, "state.json")
-    with open(state_path, 'r') as f:
-        return json.load(f)
+    """Load state from project directory, checking new location first."""
+    # New location: .crucible/state/planning-state.json
+    new_path = os.path.join(project_path, ".crucible", "state", "planning-state.json")
+    if os.path.exists(new_path):
+        with open(new_path, 'r') as f:
+            return json.load(f)
+
+    # Legacy location: state.json at project root
+    legacy_path = os.path.join(project_path, "state.json")
+    if os.path.exists(legacy_path):
+        with open(legacy_path, 'r') as f:
+            return json.load(f)
+
+    raise FileNotFoundError(
+        f"No state file found. Checked:\n"
+        f"  - {new_path}\n"
+        f"  - {legacy_path}"
+    )
 
 
 def get_answer(answers: dict, key: str, default: str = '') -> str:
@@ -591,39 +605,39 @@ def compile_all(project_path: str) -> list:
     
     files_created = []
     
-    print("📝 Generating planning documents...")
-    
+    print("Generating planning documents...")
+
     files_created.append(generate_crucible_thesis(state, output_dir))
-    print("   ✅ Crucible Thesis")
-    
+    print("   [OK] Crucible Thesis")
+
     files_created.append(generate_quest_strand(state, output_dir))
-    print("   ✅ Quest Strand Map")
-    
+    print("   [OK] Quest Strand Map")
+
     files_created.append(generate_fire_strand(state, output_dir))
-    print("   ✅ Fire Strand Map")
-    
+    print("   [OK] Fire Strand Map")
+
     files_created.append(generate_constellation_strand(state, output_dir))
-    print("   ✅ Constellation Strand Map")
-    
+    print("   [OK] Constellation Strand Map")
+
     files_created.extend(generate_forge_points(state, output_dir))
-    print("   ✅ Forge Point Blueprints (5)")
-    
+    print("   [OK] Forge Point Blueprints (5)")
+
     files_created.append(generate_dark_mirror(state, output_dir))
-    print("   ✅ Dark Mirror Profile")
-    
+    print("   [OK] Dark Mirror Profile")
+
     files_created.append(generate_constellation_bible(state, output_dir))
-    print("   ✅ Constellation Bible")
-    
+    print("   [OK] Constellation Bible")
+
     files_created.append(generate_mercy_ledger(state, output_dir))
-    print("   ✅ Mercy Ledger")
-    
+    print("   [OK] Mercy Ledger")
+
     files_created.append(generate_world_forge(state, output_dir))
-    print("   ✅ World Forge")
-    
+    print("   [OK] World Forge")
+
     files_created.append(generate_summary(state, output_dir))
-    print("   ✅ Summary Card")
-    
-    print(f"\n✅ Generated {len(files_created)} documents in {output_dir}")
+    print("   [OK] Summary Card")
+
+    print(f"\n[OK] Generated {len(files_created)} documents in {output_dir}")
     
     return files_created
 
@@ -637,11 +651,11 @@ def main():
     
     try:
         files = compile_all(project_path)
-        print("\n📁 Files created:")
+        print("\nFiles created:")
         for f in files:
             print(f"   {f}")
     except FileNotFoundError as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] {e}")
         sys.exit(1)
 
 

@@ -17,19 +17,48 @@ if sys.version_info < (3, 8):
     print("Error: Python 3.8+ required", file=sys.stderr)
     sys.exit(1)
 
+# Import shared project detection from cross_platform
+from cross_platform import find_crucible_project
 
-def find_crucible_project(start_path: Path = None) -> Path:
-    """Find a Crucible project by looking for .crucible directory."""
-    if start_path is None:
-        start_path = Path.cwd()
 
-    current = Path(start_path)
-    for directory in [current] + list(current.parents):
-        crucible_dir = directory / ".crucible"
-        if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory
+def _load_story_bible(project_root: Path) -> dict:
+    """Load story bible if it exists, return None otherwise."""
+    if project_root is None:
+        return None
+    bible_path = project_root / "story-bible.json"
+    if not bible_path.exists():
+        return None
+    try:
+        with open(bible_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
 
-    return None
+
+def _sync_with_story_bible(project_root: Path, state: dict) -> None:
+    """Sync draft state with story bible to prevent desynchronization."""
+    bible = _load_story_bible(project_root)
+    if bible is None:
+        return
+
+    if "progress" not in bible:
+        return
+
+    # Sync progress fields
+    bible["progress"]["current_chapter"] = state.get("current_chapter", 1)
+    bible["progress"]["current_scene"] = state.get("current_scene", 1)
+    bible["progress"]["chapters_complete"] = state.get("chapters_complete", 0)
+
+    if "meta" in bible:
+        bible["meta"]["updated"] = datetime.now().isoformat()
+
+    # Save updated bible
+    bible_path = project_root / "story-bible.json"
+    try:
+        with open(bible_path, "w", encoding="utf-8") as f:
+            json.dump(bible, f, indent=2)
+    except OSError:
+        pass  # Best effort sync
 
 
 def load_draft_state(project_root: Path) -> dict:
@@ -89,6 +118,9 @@ def update_chapter_complete(project_root: Path, chapter_num: int) -> dict:
     state["current_scene"] = 1
 
     # Check if bi-chapter review is needed
+    # REVIEW LOGIC: Trigger when 2+ chapters completed since last review.
+    # Canonical source: sync_draft_state() in update_story_bible.py
+    # Also mirrored in: backup_on_change.py, load_project_context.py
     chapters_since_review = state["chapters_complete"] - state["last_review_at_chapter"]
 
     if chapters_since_review >= 2:
@@ -100,6 +132,9 @@ def update_chapter_complete(project_root: Path, chapter_num: int) -> dict:
         review_chapters = None
 
     save_draft_state(project_root, state)
+
+    # Sync with story bible to prevent desynchronization
+    _sync_with_story_bible(project_root, state)
 
     return {
         "success": True,
@@ -202,7 +237,7 @@ def main():
         result = update_chapter_complete(project_root, args.chapter_complete)
         if not args.json and result["review_needed"]:
             print(f"Chapter {args.chapter_complete} marked complete.")
-            print(f"⚠️  BI-CHAPTER REVIEW NEEDED for chapters {result['review_chapters'][0]}-{result['review_chapters'][1]}")
+            print(f"[WARN] BI-CHAPTER REVIEW NEEDED for chapters {result['review_chapters'][0]}-{result['review_chapters'][1]}")
 
     elif args.review_complete is not None:
         # 0 means use current chapter count, positive means specific chapter
@@ -224,7 +259,7 @@ def main():
             print(f"Current position: Chapter {result['current_chapter']}, Scene {result['current_scene']}")
             print(f"Last review at chapter: {result['last_review_at_chapter']}")
             if result['review_pending']:
-                print("⚠️  REVIEW PENDING")
+                print("[WARN] REVIEW PENDING")
             else:
                 print(f"Chapters until next review: {result['chapters_until_review']}")
 

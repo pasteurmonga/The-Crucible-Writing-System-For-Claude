@@ -6,6 +6,11 @@ Crucible Suite Plugin
 
 This script runs at the start of a Claude Code session and provides
 context about the current Crucible project state.
+
+Note: The hook's matcher in hooks.json is set to 'startup|resume|clear|compact',
+which includes 'compact' events. This is intentional - during context window
+compaction, earlier context may be summarized or truncated, so re-injecting
+project context ensures Crucible project awareness is maintained.
 """
 
 import sys
@@ -19,22 +24,11 @@ if sys.version_info < (3, 8):
     print("Error: Python 3.8+ required", file=sys.stderr)
     sys.exit(1)
 
-
-def find_crucible_project(start_path: Path = None) -> Path:
-    """Find a Crucible project by looking for .crucible directory."""
-    if start_path is None:
-        start_path = Path.cwd()
-
-    current = Path(start_path)
-    for directory in [current] + list(current.parents):
-        crucible_dir = directory / ".crucible"
-        if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory
-
-    return None
+# Import shared project detection from cross_platform
+from cross_platform import find_crucible_project_with_type
 
 
-def get_project_context(project_root: Path) -> str:
+def get_project_context(project_root: Path, structure_type: str = None) -> str:
     """Generate context string for the session."""
 
     if project_root is None:
@@ -84,12 +78,20 @@ def get_project_context(project_root: Path) -> str:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Check for draft state
+    # Check for draft state (new location first, then legacy)
     draft_state_file = state_dir / "draft-state.json"
-    if not phase_context and draft_state_file.exists():
+    legacy_draft_state = project_root / "project-state.json"
+
+    draft_state_to_use = None
+    if draft_state_file.exists():
+        draft_state_to_use = draft_state_file
+    elif legacy_draft_state.exists():
+        draft_state_to_use = legacy_draft_state
+
+    if not phase_context and draft_state_to_use:
         phase = "writing"
         try:
-            with open(draft_state_file, "r", encoding="utf-8") as f:
+            with open(draft_state_to_use, "r", encoding="utf-8") as f:
                 state = json.load(f)
                 phase_context.append(f"Currently in: WRITING phase")
                 phase_context.append(f"Current chapter: {state.get('current_chapter', '?')}")
@@ -98,13 +100,17 @@ def get_project_context(project_root: Path) -> str:
                 phase_context.append(f"Target: {state.get('target_words', 150000):,}")
 
                 # Check if bi-chapter review is due
-                current_ch = state.get('chapters_complete', 0)
-                if current_ch > 0 and current_ch % 2 == 0:
-                    last_review = state.get('last_review_chapter', 0)
-                    if last_review < current_ch:
-                        phase_context.append("")
-                        phase_context.append("⚠️ BI-CHAPTER REVIEW DUE")
-                        phase_context.append(f"Review chapters {current_ch - 1}-{current_ch} before continuing")
+                # Logic must match sync_draft_state() in update_story_bible.py
+                # Review is needed when 2+ chapters completed since last review
+                chapters_complete = state.get('chapters_complete', 0)
+                last_review = state.get('last_review_at_chapter', 0)
+                chapters_since_review = chapters_complete - last_review
+                if chapters_since_review >= 2:
+                    review_start = last_review + 1
+                    review_end = chapters_complete
+                    phase_context.append("")
+                    phase_context.append("[WARN] BI-CHAPTER REVIEW DUE")
+                    phase_context.append(f"Review chapters {review_start}-{review_end} before continuing")
         except (json.JSONDecodeError, OSError):
             pass
 
@@ -121,21 +127,37 @@ def get_project_context(project_root: Path) -> str:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # Check for planning state
+    # Check for planning state (new location first, then legacy)
     planning_state_file = state_dir / "planning-state.json"
-    if not phase_context and planning_state_file.exists():
-        phase = "planning"
-        try:
-            with open(planning_state_file, "r", encoding="utf-8") as f:
-                state = json.load(f)
-                phase_context.append(f"Currently in: PLANNING phase")
-                phase_context.append(f"Current document: {state.get('current_document', '?')}")
-                phase_context.append(f"Documents complete: {state.get('documents_complete', 0)}/9")
-        except (json.JSONDecodeError, OSError):
-            pass
+    legacy_planning_state = project_root / "state.json"
 
-    # Check if we have planning docs but no state file
-    planning_dir = crucible_dir / "planning"
+    if not phase_context:
+        state_file_to_use = None
+        if planning_state_file.exists():
+            state_file_to_use = planning_state_file
+        elif legacy_planning_state.exists():
+            state_file_to_use = legacy_planning_state
+
+        if state_file_to_use:
+            phase = "planning"
+            try:
+                with open(state_file_to_use, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                    # Check if this looks like a planning state file
+                    if "progress" in state and "current_document" in state.get("progress", {}):
+                        phase_context.append(f"Currently in: PLANNING phase")
+                        progress = state.get("progress", {})
+                        phase_context.append(f"Current document: {progress.get('current_document', '?')}")
+                        docs_complete = progress.get('documents_complete', [])
+                        if isinstance(docs_complete, list):
+                            phase_context.append(f"Documents complete: {len(docs_complete)}/9")
+                        else:
+                            phase_context.append(f"Documents complete: {docs_complete}/9")
+            except (json.JSONDecodeError, OSError):
+                pass
+
+    # Check if we have planning docs but no state file (at project root)
+    planning_dir = project_root / "planning"
     if not phase_context and planning_dir.exists():
         docs = list(planning_dir.glob("*.md")) + list(planning_dir.glob("**/*.md"))
         if docs:
@@ -160,29 +182,46 @@ def get_project_context(project_root: Path) -> str:
 
 
 def main():
-    # Read hook input from stdin
+    """Main entry point with top-level error handling for hook stability."""
     try:
-        input_data = json.load(sys.stdin)
-    except json.JSONDecodeError:
-        input_data = {}
+        # Read hook input from stdin
+        try:
+            input_data = json.load(sys.stdin)
+        except json.JSONDecodeError:
+            input_data = {}
 
-    # Find project
-    project_root = find_crucible_project()
+        # Find project using shared detection logic
+        project_root, structure_type = find_crucible_project_with_type()
 
-    # Generate context
-    context = get_project_context(project_root)
+        # Generate context
+        context = get_project_context(project_root, structure_type)
 
-    # Output for SessionStart hook
-    # This format allows the context to be injected into the session
-    output = {
-        "hookSpecificOutput": {
-            "hookEventName": "SessionStart",
-            "additionalContext": context
+        # Output for SessionStart hook
+        # This format allows the context to be injected into the session
+        output = {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": context
+            }
         }
-    }
 
-    print(json.dumps(output, indent=2))
-    sys.exit(0)
+        print(json.dumps(output, indent=2))
+        sys.exit(0)
+
+    except Exception as e:
+        # Graceful degradation: return valid hook output even on error
+        # Log the error to stderr for debugging
+        print(f"Error in load_project_context: {e}", file=sys.stderr)
+
+        # Return valid but empty hook output
+        output = {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": ""
+            }
+        }
+        print(json.dumps(output, indent=2))
+        sys.exit(0)  # Exit 0 so hook doesn't block session start
 
 
 if __name__ == "__main__":

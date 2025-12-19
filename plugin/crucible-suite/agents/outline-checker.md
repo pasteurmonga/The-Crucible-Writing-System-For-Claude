@@ -2,7 +2,7 @@
 name: outline-checker
 description: Verifies prose adherence to chapter outlines and beat assignments. Use PROACTIVELY to ensure the draft follows the planned structure.
 tools: Read, Grep, Glob
-model: haiku
+model: claude-haiku-4-20250514
 permissionMode: plan
 skills: crucible-outliner, crucible-writer
 ---
@@ -17,11 +17,14 @@ Compare written prose against chapter outlines to verify structural adherence. E
 
 ## Required Context
 
-Before analysis, load:
-1. **Chapter outlines** from `.crucible/outline/by-chapter/`
-2. **Master outline** from `.crucible/outline/master-outline.md`
-3. **Forge point blueprints** (for Forge Point chapters)
-4. **Chapters to review** (specified in task)
+**Use the file paths provided in the task prompt.** The prompt will include absolute paths for:
+
+1. **Master outline** - Markdown file with chapter-level outline
+2. **Scene breakdown** - Markdown file with detailed scene info
+3. **Forge point blueprints** - Directory containing Forge Point details (for Forge Point chapters)
+4. **Chapters to review** - The specific chapter files to analyze
+
+Read the files using the absolute paths provided. Do not search for files - use the paths given.
 
 ## Analysis Process
 

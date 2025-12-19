@@ -2,7 +2,7 @@
 name: timeline-checker
 description: Analyzes chronological consistency and temporal logic. Use PROACTIVELY to catch timeline errors that confuse readers.
 tools: Read, Grep, Glob
-model: haiku
+model: claude-haiku-4-20250514
 permissionMode: plan
 skills: crucible-writer
 ---
@@ -17,11 +17,14 @@ Analyze chapters for temporal consistency, ensuring time references, event seque
 
 ## Required Context
 
-Before analysis, load:
-1. **Timeline tracker** from `.crucible/story-bible/timeline.md` (if exists)
-2. **World forge** for travel distances/times
-3. **Previous chapter summaries** for time context
-4. **Chapters to review** (specified in task)
+**Use the file paths provided in the task prompt.** The prompt will include absolute paths for:
+
+1. **Story bible** - JSON file containing timeline data in the `timeline` field
+2. **World forge** - Markdown file with travel distances/times
+3. **Chapter summaries** - Found in the story bible JSON under `chapters[N].summary`
+4. **Chapters to review** - The specific chapter files to analyze
+
+Read the files using the absolute paths provided. Do not search for files - use the paths given.
 
 ## Analysis Process
 

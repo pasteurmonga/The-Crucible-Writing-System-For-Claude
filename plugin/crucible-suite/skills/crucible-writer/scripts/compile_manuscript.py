@@ -6,6 +6,8 @@ import os
 import sys
 from datetime import datetime
 
+from update_story_bible import load_bible
+
 
 def compile_manuscript(path: str, output_format: str = "md") -> str:
     """
@@ -24,19 +26,21 @@ def compile_manuscript(path: str, output_format: str = "md") -> str:
     
     os.makedirs(manuscript_dir, exist_ok=True)
     
-    with open(bible_path, "r") as f:
-        story_bible = json.load(f)
+    # Load story bible using load_bible() for automatic schema validation
+    story_bible = load_bible(path)
     
     title = story_bible["meta"]["title"]
     
     # Collect all chapters
+    # Filter out example/template keys (starting with _) to avoid ValueError on int()
     chapters = []
     total_words = 0
-    
-    for chapter_num in sorted([int(k) for k in story_bible["chapters"].keys()]):
+
+    chapter_keys = [k for k in story_bible["chapters"].keys() if not k.startswith("_")]
+    for chapter_num in sorted([int(k) for k in chapter_keys]):
         chapter_file = os.path.join(chapter_dir, f"ch{chapter_num:02d}.md")
         if os.path.exists(chapter_file):
-            with open(chapter_file, "r") as f:
+            with open(chapter_file, "r", encoding="utf-8") as f:
                 content = f.read()
             chapters.append({
                 "number": chapter_num,
@@ -71,24 +75,24 @@ def compile_manuscript(path: str, output_format: str = "md") -> str:
     manuscript_text = "\n".join(manuscript)
     
     output_file = os.path.join(manuscript_dir, f"full-manuscript.{output_format}")
-    with open(output_file, "w") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(manuscript_text)
     
-    print(f"✅ Manuscript compiled: {output_file}")
+    print(f"[OK] Manuscript compiled: {output_file}")
     print(f"   Chapters: {len(chapters)}")
     print(f"   Total words: {total_words:,}")
     
     # Generate word count report
     report = generate_word_count_report(story_bible, chapters)
     report_file = os.path.join(manuscript_dir, "chapter-word-counts.md")
-    with open(report_file, "w") as f:
+    with open(report_file, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"   Word count report: {report_file}")
     
     # Generate continuity report
     continuity = generate_continuity_report(story_bible)
     continuity_file = os.path.join(manuscript_dir, "continuity-report.md")
-    with open(continuity_file, "w") as f:
+    with open(continuity_file, "w", encoding="utf-8") as f:
         f.write(continuity)
     print(f"   Continuity report: {continuity_file}")
     
@@ -120,11 +124,11 @@ def generate_word_count_report(bible: dict, chapters: list) -> str:
         pct = actual / target_per_chapter * 100 if target_per_chapter > 0 else 0
         
         if pct < 80:
-            status = "⚠️ Short"
+            status = "[!] Short"
         elif pct > 120:
-            status = "⚠️ Long"
+            status = "[!] Long"
         else:
-            status = "✓"
+            status = "[OK]"
         
         report.append(f"| {ch['number']} | {target_per_chapter:,} | {actual:,} | {diff:+,} | {status} |")
     
@@ -136,9 +140,10 @@ def generate_continuity_report(bible: dict) -> str:
     report = []
     report.append("# Continuity Report\n")
     report.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
-    
-    # Unresolved foreshadowing
-    unresolved = [p for p in bible["foreshadowing"]["planted"] if not p.get("paid_off")]
+
+    # Unresolved foreshadowing (filter out _comment example entries)
+    unresolved = [p for p in bible["foreshadowing"]["planted"]
+                  if not p.get("paid_off") and "_comment" not in p]
     report.append(f"\n## Unresolved Foreshadowing ({len(unresolved)} items)\n")
     if unresolved:
         for plant in unresolved:
@@ -147,35 +152,37 @@ def generate_continuity_report(bible: dict) -> str:
             if plant.get("expected_payoff"):
                 report.append(f"  - Expected: {plant['expected_payoff']}")
     else:
-        report.append("All foreshadowing resolved. ✓\n")
+        report.append("All foreshadowing resolved. [OK]\n")
     
-    # Resolved foreshadowing
-    resolved = bible["foreshadowing"]["paid_off"]
+    # Resolved foreshadowing (filter out _comment example entries)
+    resolved = [p for p in bible["foreshadowing"]["paid_off"] if "_comment" not in p]
     report.append(f"\n## Resolved Foreshadowing ({len(resolved)} items)\n")
     for payoff in resolved:
-        report.append(f"- {payoff['thread']}: {payoff['planted_in']} → {payoff['paid_in']}")
+        report.append(f"- {payoff['thread']}: {payoff['planted_in']} -> {payoff['paid_in']}")
     
-    # Invented details
-    inventions = bible["invented_details"]
+    # Invented details (filter out _comment example entries)
+    inventions = [d for d in bible["invented_details"] if "_comment" not in d]
     unreviewed = [d for d in inventions if not d.get("reviewed")]
     report.append(f"\n## Invented Details\n")
     report.append(f"- Total: {len(inventions)}")
     report.append(f"- Reviewed: {len(inventions) - len(unreviewed)}")
     report.append(f"- Pending review: {len(unreviewed)}")
-    
+
     if unreviewed:
         report.append(f"\n### Pending Review:\n")
         for d in unreviewed:
             report.append(f"- [{d['category']}] {d['detail']} (ch{d['chapter']}.{d['scene']})")
-    
-    # Established facts count
-    facts = bible["established_facts"]
+
+    # Established facts count (filter out _comment example entries)
+    facts = [f for f in bible["established_facts"] if "_comment" not in f]
     report.append(f"\n## Established Facts: {len(facts)} items\n")
-    
-    # Timeline
+
+    # Timeline (filter out _comment keys)
     if bible["timeline"]:
         report.append(f"\n## Timeline\n")
-        for ch, time in sorted(bible["timeline"].items(), key=lambda x: int(x[0])):
+        timeline_entries = [(k, v) for k, v in bible["timeline"].items()
+                           if not k.startswith("_") and k.isdigit()]
+        for ch, time in sorted(timeline_entries, key=lambda x: int(x[0])):
             report.append(f"- Chapter {ch}: {time}")
     
     return "\n".join(report)
@@ -203,11 +210,11 @@ def export_for_editing(path: str) -> str:
         chapter_dir = os.path.join(path, "draft", "chapters")
         manuscript_dir = os.path.join(path, "manuscript")
         
-        with open(bible_path, "r") as f:
-            story_bible = json.load(f)
-        
+        # Use load_bible for schema validation
+        story_bible = load_bible(path)
+
         title = story_bible["meta"]["title"]
-        
+
         doc = Document()
         
         # Title
@@ -216,12 +223,13 @@ def export_for_editing(path: str) -> str:
         doc.add_page_break()
         
         # Chapters
-        for chapter_num in sorted([int(k) for k in story_bible["chapters"].keys()]):
+        chapter_keys = [k for k in story_bible["chapters"].keys() if not k.startswith("_")]
+        for chapter_num in sorted([int(k) for k in chapter_keys]):
             chapter_file = os.path.join(chapter_dir, f"ch{chapter_num:02d}.md")
             if os.path.exists(chapter_file):
-                with open(chapter_file, "r") as f:
+                with open(chapter_file, "r", encoding="utf-8") as f:
                     content = f.read()
-                
+
                 # Remove markdown headers, add as Word headings
                 lines = content.split("\n")
                 for line in lines:
@@ -236,11 +244,11 @@ def export_for_editing(path: str) -> str:
         
         output_file = os.path.join(manuscript_dir, "full-manuscript.docx")
         doc.save(output_file)
-        print(f"✅ Word document created: {output_file}")
+        print(f"[OK] Word document created: {output_file}")
         return output_file
         
     except ImportError:
-        print("ℹ️ python-docx not available. Markdown export only.")
+        print("[INFO] python-docx not available. Markdown export only.")
         return os.path.join(path, "manuscript", "full-manuscript.md")
 
 

@@ -1,5 +1,5 @@
 ---
-paths: .crucible/**/*.md
+paths: planning/**/*.md, draft/**/*.md, manuscript/**/*.md
 ---
 
 # Fantasy Writing Rules

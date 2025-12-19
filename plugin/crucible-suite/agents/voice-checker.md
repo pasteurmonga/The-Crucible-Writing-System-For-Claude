@@ -2,7 +2,7 @@
 name: voice-checker
 description: Analyzes prose for voice and style consistency against the author's style sample. Use PROACTIVELY during bi-chapter reviews to ensure consistent narrative voice throughout the novel.
 tools: Read, Grep, Glob
-model: haiku
+model: inherit
 permissionMode: plan
 skills: crucible-writer
 ---
@@ -17,10 +17,12 @@ Analyze the provided chapters against the author's style sample to identify voic
 
 ## Required Context
 
-Before analysis, load:
-1. **Style sample** from `.crucible/style/voice-sample.md`
-2. **Style profile** from `.crucible/style/style-profile.json`
-3. **Chapters to review** (specified in task)
+**Use the file paths provided in the task prompt.** The prompt will include absolute paths for:
+
+1. **Style profile** - JSON file containing the author's documented style preferences
+2. **Chapters to review** - The specific chapter files to analyze
+
+Read the files using the absolute paths provided. Do not search for files - use the paths given.
 
 ## Analysis Process
 

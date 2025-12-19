@@ -69,8 +69,12 @@ Use AskUserQuestion with these options:
 When resuming a planning session, **load and display the saved answers** so the user knows their progress was preserved.
 
 **Step 1: Load State**
-Read the state.json file to get saved answers and progress:
+Read the planning state file to get saved answers and progress (check new location first, then legacy):
 ```bash
+# New location (preferred)
+cat <project_path>/.crucible/state/planning-state.json
+
+# Legacy location (fallback)
 cat <project_path>/state.json
 ```
 

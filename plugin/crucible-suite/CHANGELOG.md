@@ -202,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Scripts
 - `check_stop_conditions.py` - Stop hook enforcement script
   - Reads project state from `.crucible/state/draft-state.json`
-  - Checks `chapters_complete` vs `last_review_chapter`
+  - Checks `chapters_complete` vs `last_review_at_chapter`
   - Returns exit code 2 with action instructions when blocked
   - Returns exit code 0 when session can safely end
 
@@ -226,6 +226,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PostToolUse provides soft reminders via `additionalContext`
 - Stop hook provides hard enforcement via exit code 2
 - Hybrid approach: gentle nudges + strict gates
+
+## [1.0.5] - 2025-12-18
+
+### Fixed
+
+#### Hook Output Compliance
+- **backup_on_change.py**: Now outputs only `hookSpecificOutput` per official Claude Code hooks specification
+  - Removed non-spec fields (`success`, `action`, `backup_result`)
+  - Empty `{}` output when no context needed
+  - `hookSpecificOutput.additionalContext` only when review reminder is required
+
+#### Model Specification
+- Updated model shorthand `haiku` to full model ID `claude-haiku-4-20250514` in 4 files:
+  - `commands/crucible-restore.md`
+  - `commands/crucible-status.md`
+  - `agents/timeline-checker.md`
+  - `agents/outline-checker.md`
+
+#### Windows Compatibility
+- **safe_write_json()**: Fixed atomicity issue on Windows
+  - Added fallback delete-then-move pattern when `Path.replace()` fails
+  - Temp file cleanup on error
+
+#### Error Handling
+- **backup_on_change.py**: Added comprehensive OSError handling
+  - Handles stdin read errors alongside JSON decode errors
+  - Graceful handling of filesystem errors during project detection
+  - Cleanup block now handles permission errors and file-in-use scenarios
+
+### Changed
+
+#### Path Encoding for Incremental Backups
+- **backup_on_change.py**: Now uses base64url encoding for backup filenames
+  - Replaces ambiguous underscore-based path flattening
+  - Reversible encoding allows exact path reconstruction
+  - Example: `draft/chapter-1.md` → `ZHJhZnQvY2hhcHRlci0xLm1k`
+
+- **restore_project.py**: Backward-compatible path decoding
+  - Tries base64url decode first (new format)
+  - Falls back to underscore heuristics (legacy format)
+  - Existing backups remain fully restorable
+
+### Added
+
+#### Shared Utilities
+- **cross_platform.py**: New path encoding functions
+  - `encode_path_b64(path)` - URL-safe base64 encoding
+  - `decode_path_b64(encoded)` - Decode with padding restoration
+  - `is_base64_encoded_path(s)` - Format detection for backward compatibility
+
+### Technical Details
+- All hook outputs now comply with official `hooks.md` specification
+- Base64url encoding uses Python's `base64.urlsafe_b64encode/decode`
+- Backward compatibility maintained for all existing incremental backups
+- Cross-platform tested on Windows and Unix-like systems
+
+## [1.0.9] - 2025-12-19
+
+### Added
+
+#### Project Metadata Updates
+- Added `--set` argument to `save_state.py` for updating project metadata
+  - `--set title "Title"` - Update project title
+  - `--set premise "Premise"` - Update project premise
+  - Supports multiple `--set` flags in a single call
+  - Also works for scope fields: target_length, complexity, chapters
+- Example: `python save_state.py ./project --set title "New Title" --set premise "New premise"`
+
+## [1.0.8] - 2025-12-19
+
+### Fixed
+
+#### Scope Answer Handling
+- `save_state.py` now handles "scope" as a special document key
+  - Previously failed with `KeyError: 'scope'` when skill saved scope answers via `--answer`
+  - Scope answers now correctly stored in `state["scope"]` instead of `state["answers"]["scope"]`
+  - Added key mapping for variations: `novel_length` -> `target_length`, `narrative_complexity` -> `complexity`
+  - Automatically calculates chapter count when target_length is set
+
+## [1.0.7] - 2025-12-19
+
+### Fixed
+
+#### Windows Console Encoding
+- Replaced all emoji characters with ASCII equivalents in Python scripts
+  - `✅` → `[OK]`
+  - `❌` → `[ERROR]`
+  - `✓` → `[x]` or `+`
+- Windows cmd/PowerShell cannot encode Unicode emoji (charmap codec error)
+- Affected 15+ scripts across planner, outliner, writer, and migration tools
+- All console output now uses safe ASCII characters
+
+### Changed
+- All print statements now Windows-compatible without encoding workarounds
+
+## [1.0.6] - 2025-12-18
+
+### Added
+
+#### New Scripts
+- `draft_utils.py` - Shared draft utilities
+- `extract_invented_markers.py` - Extract invention markers from prose
+- `validate_before_write.py` - Pre-write validation
+- `restore_backup.py` / `restore_project.py` - Backup restoration utilities
+
+#### Story Bible Commands
+- `story-bible-commands.md` reference for Writer skill
+
+#### Bi-Chapter Review Reference
+- `bi-chapter-review.md` documentation for review process
+
+### Changed
+- Enhanced cross_platform.py with additional project detection methods
+- Updated hook configurations for better reliability
+- Improved backup directory handling for different project structures
 
 ## [Unreleased]
 

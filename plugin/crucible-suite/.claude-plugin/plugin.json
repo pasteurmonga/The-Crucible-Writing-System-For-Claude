@@ -1,6 +1,6 @@
 {
   "name": "crucible-suite",
-  "version": "1.0.4",
+  "version": "1.0.9",
   "description": "Complete writing system for epic fantasy novels using the Crucible Structure—a 36-beat narrative framework with three interwoven story strands. Includes planning, outlining, prose writing with bi-chapter reviews, and editing.",
   "author": {
     "name": "Crucible Writing System"
@@ -8,5 +8,13 @@
   "homepage": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude",
   "repository": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude",
   "license": "MIT",
-  "keywords": ["writing", "fantasy", "novel", "crucible-structure", "planning", "outlining", "creative-writing"]
+  "keywords": ["writing", "fantasy", "novel", "crucible-structure", "planning", "outlining", "creative-writing"],
+  "agents": [
+    "./agents/continuity-checker.md",
+    "./agents/outline-checker.md",
+    "./agents/prose-checker.md",
+    "./agents/timeline-checker.md",
+    "./agents/voice-checker.md"
+  ],
+  "hooks": "./hooks/hooks.json"
 }
