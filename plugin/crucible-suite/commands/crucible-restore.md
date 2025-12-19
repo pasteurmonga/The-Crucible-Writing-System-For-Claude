@@ -2,7 +2,7 @@
 allowed-tools: Read, Write, Glob, Bash
 argument-hint: [timestamp] | "latest"
 description: Restore your project from a backup. Lists available backups and allows selective restoration.
-model: claude-haiku-4-20250514
+model: claude-haiku-4-5-20251001
 ---
 
 # /crucible-restore

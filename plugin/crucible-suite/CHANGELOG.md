@@ -282,6 +282,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backward compatibility maintained for all existing incremental backups
 - Cross-platform tested on Windows and Unix-like systems
 
+## [1.0.10] - 2025-12-19
+
+### Fixed
+
+#### Model Specification
+- Fixed invalid model ID in `crucible-status.md` and `crucible-restore.md`
+  - Changed from non-existent `claude-haiku-4-20250514` to valid `claude-haiku-4-5-20251001`
+  - Commands were failing with 404 API errors due to invalid model reference
+
+#### Hook Configuration
+- Temporarily disabled hooks to resolve plugin cache version mismatch
+  - Hooks were referencing stale cached paths after version updates
+  - Requires Claude Code restart to properly reload plugin configuration
+  - Re-enable hooks after restart by restoring hooks.json content
+
+### Changed
+
+#### Plugin Installation Path
+- Updated installed_plugins.json to point to source directory for local development
+  - Allows immediate testing of plugin changes without cache rebuild
+
 ## [1.0.9] - 2025-12-19
 
 ### Added

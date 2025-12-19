@@ -2,7 +2,7 @@
 allowed-tools: Read, Glob, Grep, Bash
 argument-hint:
 description: Show current project progress across all Crucible phases (planning, outlining, writing, editing).
-model: claude-haiku-4-20250514
+model: claude-haiku-4-5-20251001
 ---
 
 # /crucible-status
