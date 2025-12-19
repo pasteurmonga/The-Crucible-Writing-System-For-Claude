@@ -20,6 +20,49 @@ if sys.version_info < (3, 8):
     sys.exit(1)
 
 
+def _check_directory_for_markers(directory: Path) -> Tuple[Optional[Path], Optional[str]]:
+    """
+    Check a single directory for Crucible project markers.
+
+    This helper function checks for project markers in priority order
+    and returns the directory and structure type if found.
+
+    Priority order:
+    1. .crucible/ directory -> "dotcrucible" structure
+    2. state.json file -> "rootlevel" structure
+    3. story-bible.json file -> "legacy" structure
+    4. planning/ directory -> "legacy" structure
+
+    Args:
+        directory: The directory to check for markers
+
+    Returns:
+        Tuple of (directory, structure_type) if markers found,
+        (None, None) if no markers found
+    """
+    # Priority 1: .crucible directory (standard structure)
+    crucible_dir = directory / ".crucible"
+    if crucible_dir.exists() and crucible_dir.is_dir():
+        return directory, "dotcrucible"
+
+    # Priority 2: state.json at root (planner-created structure)
+    state_file = directory / "state.json"
+    if state_file.exists():
+        return directory, "rootlevel"
+
+    # Priority 3: story-bible.json (legacy/transition structure)
+    story_bible = directory / "story-bible.json"
+    if story_bible.exists():
+        return directory, "legacy"
+
+    # Priority 4: planning/ directory (legacy structure)
+    planning_dir = directory / "planning"
+    if planning_dir.exists() and planning_dir.is_dir():
+        return directory, "legacy"
+
+    return None, None
+
+
 def find_crucible_project_with_type(start_path: Optional[Path] = None) -> Tuple[Optional[Path], Optional[str]]:
     """
     Find a Crucible project by looking for project markers.
@@ -27,7 +70,11 @@ def find_crucible_project_with_type(start_path: Optional[Path] = None) -> Tuple[
     This is the CANONICAL project detection function with structure type info.
     All Crucible scripts should use this function for consistent project detection.
 
-    Detection order (first match wins):
+    Search order:
+    1. Current directory and parent directories (upward search)
+    2. Immediate subdirectories of start_path (one level deep, fallback)
+
+    Detection priority (first match wins within each directory):
     1. .crucible/ directory -> "dotcrucible" structure (standard)
     2. state.json at root -> "rootlevel" structure (planner-created)
     3. story-bible.json at root -> "legacy" structure
@@ -49,27 +96,23 @@ def find_crucible_project_with_type(start_path: Optional[Path] = None) -> Tuple[
     else:
         current = Path(start_path)
 
-    # Check current directory and parents
+    # Check current directory and parents (upward search)
     for directory in [current] + list(current.parents):
-        # Priority 1: .crucible directory (standard structure)
-        crucible_dir = directory / ".crucible"
-        if crucible_dir.exists() and crucible_dir.is_dir():
-            return directory, "dotcrucible"
+        result = _check_directory_for_markers(directory)
+        if result[0] is not None:
+            return result
 
-        # Priority 2: state.json at root (planner-created structure)
-        state_file = directory / "state.json"
-        if state_file.exists():
-            return directory, "rootlevel"
-
-        # Priority 3: story-bible.json (legacy/transition structure)
-        story_bible = directory / "story-bible.json"
-        if story_bible.exists():
-            return directory, "legacy"
-
-        # Priority 4: planning/ directory (legacy structure)
-        planning_dir = directory / "planning"
-        if planning_dir.exists() and planning_dir.is_dir():
-            return directory, "legacy"
+    # Fallback: Search immediate subdirectories (one level deep)
+    try:
+        for subdir in current.iterdir():
+            if not subdir.is_dir() or subdir.name.startswith('.'):
+                continue
+            result = _check_directory_for_markers(subdir)
+            if result[0] is not None:
+                return result
+    except (PermissionError, OSError):
+        # Handle case where directory listing fails
+        pass
 
     return None, None
 

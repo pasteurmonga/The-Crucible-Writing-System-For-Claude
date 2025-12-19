@@ -5,6 +5,27 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.12] - 2025-12-19
+
+### Fixed
+
+#### Project Detection
+- Fixed status command failing to find projects in subdirectories
+  - Root cause: `find_crucible_project_with_type()` only searched upward (current dir and parents)
+  - When user is in parent directory (e.g., `C:\books\test3`) with project in subdirectory (e.g., `crucible-project/`), detection failed
+  - Added fallback search that checks immediate subdirectories (one level deep)
+  - Skips hidden directories (starting with `.`) and handles permission errors gracefully
+
+### Added
+
+#### Shared Utilities
+- `_check_directory_for_markers()` helper function in `cross_platform.py`
+  - Extracts marker detection logic for reuse
+  - Maintains priority order: `.crucible/`, `state.json`, `story-bible.json`, `planning/`
+
+### Changed
+- Updated `find_crucible_project_with_type()` docstring to document two-phase search order
+
 ## [1.0.11] - 2025-12-19
 
 ### Fixed
