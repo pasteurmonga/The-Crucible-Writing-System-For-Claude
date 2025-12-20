@@ -5,6 +5,20 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.14] - 2025-12-20
+
+### Fixed
+
+#### Planning Completion Detection
+- Fixed `/crucible-continue` incorrectly reporting planning as complete when document files were never generated
+  - Root cause: `detect_project.py` only checked if 9 Q&A sessions were marked complete in state JSON
+  - Did not verify that `compile_documents.py` had actually run to generate the planning files
+  - Now requires BOTH conditions: Q&A complete (9/9 docs) AND `planning/crucible-thesis.md` exists
+- Added `planning_files_exist()` helper function to verify compiled documents exist
+- Added diagnostic fields to progress output: `qa_complete` and `files_generated`
+- Updated `get_resume_point()` to detect and report the "compile needed" state
+  - New message: "Q&A complete (9/9 docs). Run compile_documents.py to generate planning files."
+
 ## [1.0.13] - 2025-12-20
 
 ### Fixed

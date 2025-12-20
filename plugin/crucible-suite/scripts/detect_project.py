@@ -33,6 +33,21 @@ def count_words_in_files(directory: Path, pattern: str = "*.md") -> int:
     return total
 
 
+
+
+def planning_files_exist(planning_dir: Path) -> bool:
+    """
+    Check if planning documents have actually been compiled.
+
+    The Q&A phase marks documents_complete in state, but files aren't created
+    until compile_documents.py runs in Phase 3. This function verifies the
+    actual files exist.
+    """
+    return (
+        planning_dir.exists() and
+        (planning_dir / "crucible-thesis.md").exists()
+    )
+
 def detect_project_state(project_root: Path, structure_type: str = None) -> dict:
     """Detect the current state of a Crucible project."""
 
@@ -102,13 +117,22 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
         documents_complete = progress.get("documents_complete", [])
         current_doc = progress.get("current_document", 1)
 
+        # Planning is only complete if BOTH:
+        # 1. All 9 document Q&A sessions are done (state tracking)
+        # 2. The actual files have been generated (compile_documents.py ran)
+        qa_complete = len(documents_complete) >= 9
+        files_exist = planning_files_exist(planning_dir)
+        actually_complete = qa_complete and files_exist
+
         result["progress"]["planning"] = {
-            "status": "complete" if len(documents_complete) >= 9 else "in_progress",
+            "status": "complete" if actually_complete else "in_progress",
             "current_document": current_doc,
             "documents_complete": len(documents_complete),
-            "documents_total": 9
+            "documents_total": 9,
+            "qa_complete": qa_complete,
+            "files_generated": files_exist
         }
-        if len(documents_complete) < 9:
+        if not actually_complete:
             result["phase"] = "planning"
     elif structure_type == "dotcrucible":
         planning_state_file = state_dir / "planning-state.json"
@@ -116,23 +140,34 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
             try:
                 with open(planning_state_file, "r", encoding="utf-8") as f:
                     planning_state = json.load(f)
+                    # Check both state AND actual files
+                    progress_data = planning_state.get("progress", {})
+                    documents_complete = progress_data.get("documents_complete", [])
+                    qa_complete = len(documents_complete) >= 9 if isinstance(documents_complete, list) else False
+                    files_exist = planning_files_exist(planning_dir)
+                    actually_complete = qa_complete and files_exist
+
                     result["progress"]["planning"] = {
-                        "status": planning_state.get("status", "in_progress"),
-                        "current_document": planning_state.get("current_document"),
-                        "documents_complete": planning_state.get("documents_complete", 0),
-                        "documents_total": 9
+                        "status": "complete" if actually_complete else "in_progress",
+                        "current_document": progress_data.get("current_document"),
+                        "documents_complete": len(documents_complete) if isinstance(documents_complete, list) else 0,
+                        "documents_total": 9,
+                        "qa_complete": qa_complete,
+                        "files_generated": files_exist
                     }
-                    if planning_state.get("status") != "complete":
+                    if not actually_complete:
                         result["phase"] = "planning"
             except (json.JSONDecodeError, OSError):
                 pass
         elif planning_dir.exists():
-            # Check for planning documents
+            # Check for planning documents (file-based fallback)
             docs = list(planning_dir.glob("*.md")) + list(planning_dir.glob("**/*.md"))
             if docs:
                 result["progress"]["planning"] = {
                     "status": "complete",
-                    "documents_complete": len(docs)
+                    "documents_complete": len(docs),
+                    "qa_complete": True,  # Assumed if files exist
+                    "files_generated": True
                 }
     else:
         # Generic file-based check
@@ -141,7 +176,9 @@ def detect_project_state(project_root: Path, structure_type: str = None) -> dict
             if docs:
                 result["progress"]["planning"] = {
                     "status": "complete",
-                    "documents_complete": len(docs)
+                    "documents_complete": len(docs),
+                    "qa_complete": True,  # Assumed if files exist
+                    "files_generated": True
                 }
 
     # Check outline state
@@ -243,6 +280,13 @@ def get_resume_point(state: dict) -> dict:
 
     if phase == "planning":
         planning = progress.get("planning", {})
+        # Check if Q&A is done but files aren't generated
+        if planning.get("qa_complete") and not planning.get("files_generated"):
+            return {
+                "action": "compile_planning",
+                "current_document": planning.get("current_document"),
+                "message": "Q&A complete (9/9 docs). Run compile_documents.py to generate planning files."
+            }
         return {
             "action": "continue_planning",
             "current_document": planning.get("current_document"),
