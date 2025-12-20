@@ -1,6 +1,8 @@
 {
   "name": "crucible-writing-system",
-  "owner": "forsonny",
+  "owner": {
+    "name": "forsonny"
+  },
   "description": "Complete writing system for epic fantasy novels using the Crucible Structure - a 36-beat narrative framework with three interwoven story strands (Quest, Fire, Constellation), four Forge Points, and a Mercy Engine.",
   "plugins": [
     {
@@ -47,7 +49,7 @@
         "./commands/crucible-status.md",
         "./commands/crucible-write.md"
       ],
-      "source": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git"
+      "source": "./"
     }
   ]
 }
