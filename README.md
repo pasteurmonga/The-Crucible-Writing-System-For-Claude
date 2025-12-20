@@ -1,12 +1,12 @@
 # Crucible Suite
 
-A complete writing system for epic fantasy novels using the Crucible Structure—a 36-beat narrative framework with three interwoven story strands.
+A Claude Code plugin for writing epic fantasy novels using the Crucible Structure--a 36-beat narrative framework with three interwoven story strands.
 
 ## Overview
 
 Crucible Suite guides authors through the complete novel-writing process:
 
-1. **Planning** - Interactive questionnaire generates 7 comprehensive planning documents
+1. **Planning** - Interactive questionnaire generates 9 comprehensive planning documents
 2. **Outlining** - Transform planning documents into detailed chapter-by-chapter outlines
 3. **Writing** - Scene-by-scene drafting with style matching and anti-hallucination protocols
 4. **Editing** - Multi-level revision from developmental editing to final polish
@@ -15,7 +15,7 @@ Crucible Suite guides authors through the complete novel-writing process:
 
 - **36-Beat Narrative Framework** - Structured story beats ensure compelling pacing
 - **Three Interwoven Strands** - Quest (external), Fire (internal), Constellation (relationships)
-- **Five Forge Points** - Critical convergence moments where all strands collide
+- **Four Forge Points + Apex** - Critical convergence moments where all strands collide
 - **Mercy Engine** - Track acts of mercy that pay off in the climax
 - **Bi-Chapter Reviews** - Automated quality checks every 2 chapters
 - **Anti-Hallucination Protocols** - Strict verification against planning documents
@@ -93,27 +93,32 @@ Example:
 
 ### Three Strands
 
-- **Quest Strand** - The external mission or goal
+- **Quest Strand** - The external mission, burden, or objective
 - **Fire Strand** - Internal power, curse, or transformation
-- **Constellation Strand** - Relationships and community
+- **Constellation Strand** - Relationships, community, bonds that anchor or break
 
-### Five Movements
+### Six Movements
 
-1. **Ignition** (Beats 1-6) - Setup and catalyst
-2. **First Tempering** (Beats 7-14) - Rising complications
-3. **Scattering** (Beats 15-22) - Midpoint crisis
-4. **Brightest Burning** (Beats 23-28) - Dark night
-5. **Final Forging** (Beats 29-34) - Climax and resolution
+| Movement | Name | % of Book | Function |
+|----------|------|-----------|----------|
+| I | Ignition | 10% | Light the forge |
+| II | First Tempering | 20% | Shape through failure |
+| III | Scattering | 25% | Expand, harden, fragment |
+| IV | Brightest Burning | 25% | Master, gather, choose |
+| V | Final Forging | 15% | Converge, fail, transcend |
+| Coda | Tempered Blade | 5% | Reveal what was made |
 
 ### Forge Points
 
 Critical moments where all three strands collide:
 
-1. **Ignition Forge Point** (~10%)
-2. **First Crucible** (~25%)
-3. **Second Crucible** (~50%)
-4. **Third Crucible** (~75%)
-5. **Apex Willed Surrender** (~90%)
+| Forge Point | Location | Function |
+|-------------|----------|----------|
+| Ignition Forge | ~10% (Beat 6) | Threshold destroyed; no return |
+| First Crucible | ~25% (Beat 11) | All strands in crisis; one sacrificed |
+| Second Crucible | ~50% (Beat 21) | Harder choice, higher stakes |
+| Third Crucible | ~75% (Beat 28) | Deepest sacrifice before finale |
+| Apex Willed Surrender | ~90% (Beat 33) | Essential thing given up by choice |
 
 ## Review Agents
 
@@ -127,58 +132,67 @@ Five specialized agents analyze your prose during bi-chapter reviews:
 | **timeline-checker** | Chronological consistency |
 | **prose-checker** | Craft-level feedback |
 
+## Planning Documents
+
+The planning phase generates 9 documents:
+
+| Document | Purpose |
+|----------|---------|
+| **Crucible Thesis** | Core forging question and strand summaries |
+| **Quest Strand Map** | External mission beats and progression |
+| **Fire Strand Map** | Internal transformation arc |
+| **Constellation Strand Map** | Relationship dynamics and bonds |
+| **Forge Points** | Detailed convergence scenes (5 files) |
+| **Dark Mirror Profile** | Antagonist as shadow of protagonist |
+| **Constellation Bible** | Character relationships and dynamics |
+| **Mercy Ledger** | Acts of mercy that pay off in climax |
+| **World Forge** | Worldbuilding tied to theme |
+
 ## Project Structure
 
 When you start a Crucible project, it creates:
 
 ```
 your-project/
-├── CLAUDE.md                    # Project memory
-├── story-bible.json             # Continuity tracking (JSON)
-├── style-profile.json           # Author voice profile
-├── outline/                     # Chapter outlines
-│   ├── master-outline.md
-│   ├── chapter-summaries.md
-│   ├── scene-breakdown.md
-│   ├── foreshadowing-tracker.md
-│   ├── character-threads.md
-│   └── by-chapter/
-├── planning/                    # Planning documents
-│   ├── crucible-thesis.md
-│   ├── strand-maps/
-│   ├── forge-points/
-│   ├── dark-mirror-profile.md
-│   ├── constellation-bible.md
-│   ├── mercy-ledger.md
-│   └── world-forge.md
-├── draft/                       # Written prose
-│   └── chapters/
-├── manuscript/                  # Compiled output
-└── .crucible/
-    ├── state/                   # Session state files
-    │   ├── planning-state.json
-    │   ├── outline-state.json
-    │   ├── draft-state.json
-    │   └── edit-state.json
-    └── backups/                 # Automatic backups
++-- CLAUDE.md                    # Project memory
++-- .crucible/
+|   +-- state/
+|       +-- planning-state.json  # Session state
++-- planning/
+    +-- CLAUDE.md                # Planning context
+    +-- strand-maps/             # Generated strand documents
+    +-- forge-points/            # Forge point details
+```
+
+As you progress through phases, additional directories are created:
+
+```
++-- outline/                     # Added during outlining
+|   +-- CLAUDE.md
+|   +-- by-chapter/
++-- draft/                       # Added during writing
+|   +-- CLAUDE.md
+|   +-- chapters/
++-- story-bible.json             # Generated during writing
++-- style-profile.json           # Captured from samples
 ```
 
 ## Requirements
 
-- Claude Code
+- Claude Code (latest version recommended)
 - Python 3.8+ (for automation scripts)
 
 ---
 
 ## Documentation
 
-Crucible Suite includes extensive reference documentation within each skill:
+Crucible Suite includes reference documentation within each skill:
 
 | Skill | Reference Files |
 |-------|-----------------|
-| **crucible-planner** | `crucible-structure.md`, `dark-mirror-guide.md`, `forge-point-rules.md`, `mercy-engine-guide.md`, `question-sequences.md` |
+| **crucible-planner** | `crucible-structure.md`, `dark-mirror-guide.md`, `forge-point-rules.md`, `mercy-engine-guide.md`, `question-key-mapping.md`, `question-sequences.md` |
 | **crucible-outliner** | `beat-to-chapter-mapping.md`, `narrative-craft.md`, `outline-templates.md` |
-| **crucible-writer** | `anti-hallucination.md`, `context-management.md`, `prose-craft.md`, `style-capture.md`, `writing-process.md` |
+| **crucible-writer** | `anti-hallucination.md`, `bi-chapter-review.md`, `context-management.md`, `prose-craft.md`, `story-bible-commands.md`, `style-capture.md`, `writing-process.md` |
 | **crucible-editor** | `copy-editing-standards.md`, `developmental-checklist.md`, `line-editing-guide.md`, `polish-techniques.md` |
 
 Access these via the `skills/[skill-name]/references/` directories.
@@ -186,7 +200,7 @@ Access these via the `skills/[skill-name]/references/` directories.
 ## FAQ
 
 **Q: Can I use Crucible Suite for non-fantasy genres?**
-A: The 36-beat structure works well for any genre with strong character arcs. The terminology is fantasy-flavored, but the underlying principles—external goal, internal transformation, relationship dynamics—are universal.
+A: The 36-beat structure works well for any genre with strong character arcs. The terminology is fantasy-flavored, but the underlying principles--external goal, internal transformation, relationship dynamics--are universal.
 
 **Q: How long should my novel be?**
 A: Crucible Suite is optimized for epic fantasy (120,000-180,000 words). The 36 beats map to approximately 40-50 chapters at 3,000-4,000 words each.
@@ -224,8 +238,6 @@ Contributions are welcome! Here's how to help:
 ```bash
 # Clone the repository
 git clone https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git
-
-# Navigate to plugin directory
 cd The-Crucible-Writing-System-For-Claude
 
 # Test scripts
@@ -242,23 +254,6 @@ MIT License - See [LICENSE](LICENSE) for details.
 - **Documentation**: Reference files in `skills/*/references/` directories
 - **Changelog**: See [CHANGELOG.md](CHANGELOG.md) for version history
 
-## Acknowledgments
-
-- **Crucible Structure Framework** - The 36-beat narrative structure at the heart of this system
-- **Claude Code Plugin System** - Built on Anthropic's extensible plugin architecture
-- **The Fantasy Writing Community** - For inspiration and feedback on narrative frameworks
-
-## Credits
-
-**Crucible Suite** was created to make epic fantasy novel writing more structured and achievable. The system combines:
-
-- A proven 36-beat narrative framework designed specifically for epic fantasy
-- Three interwoven story strands (Quest, Fire, Constellation) that create narrative depth
-- The Mercy Engine concept—acts of compassion that pay off in the climax
-- Five Forge Points where all elements converge for maximum dramatic impact
-
-Built with ❤️ for fantasy writers who want to tell bigger stories.
-
 ---
 
-*Version 1.0.16 • [Changelog](CHANGELOG.md) • [License](LICENSE)*
+*Version 1.0.16 -- [Changelog](CHANGELOG.md) -- [License](LICENSE)*
