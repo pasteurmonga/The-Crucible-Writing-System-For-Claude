@@ -1,7 +1,7 @@
 ---
 name: crucible-planner
 # prettier-ignore
-description: Interactive planning system for epic fantasy novels using the Crucible Structure—a 36-beat narrative framework with three interwoven story strands (Quest, Fire, Constellation), four Forge Points, and a Mercy Engine. Use when user wants to plan a fantasy novel, provides a story premise/synopsis, asks to "plan my fantasy book," wants to create planning documents for an epic fantasy, or mentions the Crucible Structure. Guides users through multi-choice questions to generate 7 comprehensive planning documents from a simple premise.
+description: Interactive planning system for epic fantasy novels using the Crucible Structure—a 36-beat narrative framework with three interwoven story strands (Quest, Fire, Constellation), five Forge Points, and a Mercy Engine. Use when user wants to plan a fantasy novel, provides a story premise/synopsis, asks to "plan my fantasy book," wants to create planning documents for an epic fantasy, or mentions the Crucible Structure. Guides users through multi-choice questions to generate 7 planning document categories (14 files total) from a simple premise.
 ---
 
 # Crucible Planner
@@ -10,7 +10,7 @@ Interactive planning system for epic fantasy novels using the Crucible Structure
 
 ## Overview
 
-Starting from a simple premise, guide users through multi-choice questions to build seven interconnected planning documents:
+Starting from a simple premise, guide users through multi-choice questions to build seven interconnected planning document categories (14 files total):
 
 1. **Crucible Thesis** — philosophical core
 2. **Strand Maps** — Quest, Fire, Constellation (3 separate maps)
@@ -313,6 +313,16 @@ For each of 4 mercies:
 - Magic Rules
 - Timeline Framework
 - Verification
+
+---
+
+### Phase 2 Complete
+
+After completing Document 9 verification, Phase 2 is complete. All foundational planning documents have been created.
+
+**Proceed to Phase 3** to compile the documents into the final planning structure by running compile_documents.py.
+
+---
 
 ## Phase 3: Compilation
 

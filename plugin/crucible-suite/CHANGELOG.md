@@ -5,6 +5,22 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.13] - 2025-12-20
+
+### Fixed
+
+#### Planning Phase Completion
+- Fixed planning phase not generating documents after completing all 9 questioning cycles
+  - Root cause: No explicit transition instruction between Phase 2 (Document Generation) and Phase 3 (Compilation)
+  - Added "Phase 2 Complete" section (lines 317-325) with explicit instruction to proceed to Phase 3 and run `compile_documents.py`
+  - Claude now receives clear directive to compile documents after Document 9 verification
+
+#### Documentation Accuracy
+- Fixed "four Forge Points" to "five Forge Points" in skill description (line 4)
+- Clarified document count: "7 planning document categories (14 files total)" in both description (line 4) and overview (line 13)
+  - 7 categories: Crucible Thesis, Strand Maps, Forge Points, Dark Mirror, Constellation Bible, Mercy Ledger, World Forge
+  - 14 files: includes 3 strand maps, 5 forge point files, and summary card
+
 ## [1.0.12] - 2025-12-19
 
 ### Fixed
