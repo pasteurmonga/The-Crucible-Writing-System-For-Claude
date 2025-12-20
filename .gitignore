@@ -1,0 +1,102 @@
+# ===========================================
+# Crucible Writing System - Git Ignore
+# ===========================================
+
+# -----------------------------------------
+# Development & Reference Materials (NOT for distribution)
+# -----------------------------------------
+
+# Claude Code plugin documentation (reference only)
+CC Plugins/
+
+# Internal development docs
+docs/
+
+# Source/reference materials
+repo/
+
+# Implementation planning files
+IMPLEMENTATION-PLAN.md
+GAP-ANALYSIS.md
+USER-FLOW-DIAGRAMS.md
+
+# Project-level Claude instructions (development only)
+CLAUDE.md
+
+# -----------------------------------------
+# Claude Code Local Settings
+# -----------------------------------------
+
+# Local Claude settings (user-specific)
+.claude/settings.local.json
+
+# -----------------------------------------
+# Python
+# -----------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# -----------------------------------------
+# IDE & Editors
+# -----------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# -----------------------------------------
+# OS Generated
+# -----------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# -----------------------------------------
+# Backup Files
+# -----------------------------------------
+*.bak
+*.backup
+*.old
+
+# -----------------------------------------
+# Logs
+# -----------------------------------------
+*.log
+logs/
+
+# -----------------------------------------
+# User Project Files (created when using the plugin)
+# -----------------------------------------
+# These would be in user's project directories, not the plugin repo
+# But good to have for reference
+*.crucible-backup/
