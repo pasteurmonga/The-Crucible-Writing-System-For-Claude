@@ -1,0 +1,51 @@
+{
+  "$schema": "https://claude.ai/schemas/marketplace.json",
+  "name": "Crucible Writing System",
+  "description": "Complete writing system for epic fantasy novels using the Crucible Structure - a 36-beat narrative framework with three interwoven story strands (Quest, Fire, Constellation), four Forge Points, and a Mercy Engine.",
+  "plugins": [
+    {
+      "id": "crucible-suite",
+      "name": "Crucible Suite",
+      "version": "1.0.17",
+      "description": "Complete writing system for epic fantasy novels using the Crucible Structure. Includes planning, outlining, prose writing with bi-chapter reviews, and editing.",
+      "author": {
+        "name": "Crucible Writing System"
+      },
+      "homepage": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude",
+      "repository": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude",
+      "license": "MIT",
+      "keywords": [
+        "writing",
+        "fantasy",
+        "novel",
+        "crucible-structure",
+        "planning",
+        "outlining",
+        "creative-writing",
+        "story-structure",
+        "prose"
+      ],
+      "agents": [
+        "./agents/continuity-checker.md",
+        "./agents/outline-checker.md",
+        "./agents/prose-checker.md",
+        "./agents/timeline-checker.md",
+        "./agents/voice-checker.md"
+      ],
+      "skills": [
+        "crucible-continue",
+        "crucible-edit",
+        "crucible-outline",
+        "crucible-plan",
+        "crucible-restore",
+        "crucible-review",
+        "crucible-status",
+        "crucible-write"
+      ],
+      "install": {
+        "type": "git",
+        "url": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git"
+      }
+    }
+  ]
+}
