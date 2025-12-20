@@ -1,11 +1,10 @@
 {
-  "$schema": "https://claude.ai/schemas/marketplace.json",
-  "name": "Crucible Writing System",
+  "name": "crucible-writing-system",
+  "owner": "forsonny",
   "description": "Complete writing system for epic fantasy novels using the Crucible Structure - a 36-beat narrative framework with three interwoven story strands (Quest, Fire, Constellation), four Forge Points, and a Mercy Engine.",
   "plugins": [
     {
-      "id": "crucible-suite",
-      "name": "Crucible Suite",
+      "name": "crucible-suite",
       "version": "1.0.17",
       "description": "Complete writing system for epic fantasy novels using the Crucible Structure. Includes planning, outlining, prose writing with bi-chapter reviews, and editing.",
       "author": {
@@ -33,19 +32,22 @@
         "./agents/voice-checker.md"
       ],
       "skills": [
-        "crucible-continue",
-        "crucible-edit",
-        "crucible-outline",
-        "crucible-plan",
-        "crucible-restore",
-        "crucible-review",
-        "crucible-status",
-        "crucible-write"
+        "./skills/crucible-editor/SKILL.md",
+        "./skills/crucible-outliner/SKILL.md",
+        "./skills/crucible-planner/SKILL.md",
+        "./skills/crucible-writer/SKILL.md"
       ],
-      "install": {
-        "type": "git",
-        "url": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git"
-      }
+      "commands": [
+        "./commands/crucible-continue.md",
+        "./commands/crucible-edit.md",
+        "./commands/crucible-outline.md",
+        "./commands/crucible-plan.md",
+        "./commands/crucible-restore.md",
+        "./commands/crucible-review.md",
+        "./commands/crucible-status.md",
+        "./commands/crucible-write.md"
+      ],
+      "source": "https://github.com/forsonny/The-Crucible-Writing-System-For-Claude.git"
     }
   ]
 }
