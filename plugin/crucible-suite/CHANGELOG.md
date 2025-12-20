@@ -5,6 +5,18 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.15] - 2025-12-20
+
+### Fixed
+
+#### Planning Completion in /crucible-continue Command
+- Fixed command not verifying actual planning files exist before reporting "Planning COMPLETE"
+  - Root cause: Command only read state JSON, didn't check if compile_documents.py had run
+  - Added "CRITICAL: Planning Completion Check" section to command instructions
+  - Claude now must verify `planning/crucible-thesis.md` exists before declaring planning complete
+  - If Q&A done but files missing, offers to run compilation script
+- This complements the v1.0.14 fix to detect_project.py with instructions for the command itself
+
 ## [1.0.14] - 2025-12-20
 
 ### Fixed
