@@ -281,4 +281,4 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-*Version 1.0.17 -- [Changelog](CHANGELOG.md) -- [License](LICENSE)*
+*Version 1.0.18 -- [Changelog](CHANGELOG.md) -- [License](LICENSE)*

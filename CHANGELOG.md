@@ -5,6 +5,53 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.18] - 2025-12-20
+
+### Added
+
+#### Comprehensive Author Documentation
+- New `The-Crucible-Structure/` folder with complete framework documentation
+- Designed for both plugin users and authors writing by hand
+
+**Core Documentation (16 files):**
+- `00-introduction.md` - Overview and philosophy of the Crucible Structure
+- `01-quick-start.md` - Five-minute overview for rapid onboarding
+- `02-the-three-strands.md` - Quest, Fire, Constellation strands explained
+- `03-the-36-beats.md` - Complete beat-by-beat breakdown
+- `04-the-five-movements.md` - Movement structure with percentages
+- `05-forge-points.md` - Four Forge Points + Apex mechanics
+- `06-the-mercy-engine.md` - Four mercies and Beat 31 payoff
+- `07-the-dark-mirror.md` - Antagonist as thematic shadow
+- `08-the-three-currencies.md` - Power, Humanity, Time system
+- `09-strand-weave-pattern.md` - How strands interleave
+- `10-beat-to-chapter-mapping.md` - 18/25/35 chapter options
+- `11-quick-reference.md` - Single-page printable cheatsheet
+- `12-glossary.md` - 26 terms defined
+- `13-tutorial-walkthrough.md` - Step-by-step planning guide (3-4 hours)
+- `14-faq-and-troubleshooting.md` - 50+ common questions answered
+- `15-visual-diagrams.md` - ASCII diagrams of complete structure
+
+**Worksheets (7 blank templates):**
+- `worksheets/01-story-foundation-worksheet.md` - Premise, theme, targets
+- `worksheets/02-three-strands-worksheet.md` - Strand mapping
+- `worksheets/03-forge-points-worksheet.md` - Five crisis points
+- `worksheets/04-mercy-ledger-worksheet.md` - Mercy tracking
+- `worksheets/05-dark-mirror-worksheet.md` - Antagonist design
+- `worksheets/06-beat-planning-worksheet.md` - 36 beats to chapters
+- `worksheets/07-character-constellation-worksheet.md` - Character profiles
+
+**Completed Examples (7 files):**
+- Based on "The Memory Forge" sample story from Example Project
+- Demonstrates proper detail level and cross-referencing
+- Located in `worksheets/examples/`
+
+### Changed
+
+#### Main README Documentation Section
+- Reorganized into "Learn the Crucible Structure" and "Plugin Reference" subsections
+- Added links to tutorial, visual diagrams, FAQ, core concepts
+- Added links to worksheets and completed examples
+
 ## [1.0.17] - 2025-12-20
 
 ### Changed
