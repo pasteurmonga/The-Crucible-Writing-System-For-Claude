@@ -5,6 +5,16 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.16] - 2025-12-20
+
+### Fixed
+
+#### Review Agent Model Configuration
+- Fixed invalid model ID in outline-checker and timeline-checker agents
+  - Changed from non-existent `claude-haiku-4-20250514` to valid `haiku` shorthand
+  - Agents were failing with "model configuration error" due to 404 API responses
+  - Both agents now correctly use the haiku model for fast review checks
+
 ## [1.0.15] - 2025-12-20
 
 ### Fixed

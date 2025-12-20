@@ -2,7 +2,7 @@
 name: outline-checker
 description: Verifies prose adherence to chapter outlines and beat assignments. Use PROACTIVELY to ensure the draft follows the planned structure.
 tools: Read, Grep, Glob
-model: claude-haiku-4-20250514
+model: haiku
 permissionMode: plan
 skills: crucible-outliner, crucible-writer
 ---

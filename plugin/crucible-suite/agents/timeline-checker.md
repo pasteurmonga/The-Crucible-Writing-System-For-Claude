@@ -2,7 +2,7 @@
 name: timeline-checker
 description: Analyzes chronological consistency and temporal logic. Use PROACTIVELY to catch timeline errors that confuse readers.
 tools: Read, Grep, Glob
-model: claude-haiku-4-20250514
+model: haiku
 permissionMode: plan
 skills: crucible-writer
 ---
