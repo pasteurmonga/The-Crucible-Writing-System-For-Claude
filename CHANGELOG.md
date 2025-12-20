@@ -5,6 +5,45 @@ All notable changes to the Crucible Suite plugin will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.17] - 2025-12-20
+
+### Changed
+
+#### Repository Restructure
+- Moved plugin from `plugin/crucible-suite/` to repository root
+  - Plugin components now directly at root level for simpler installation
+  - Removed nested plugin path from all documentation
+- Merged `plugin-update` branch into `main`
+  - All development work from v1.0.1 through v1.0.16 now on main branch
+  - Installation URL simplified: no longer requires `#plugin-update` branch reference
+
+#### README Accuracy Overhaul
+- Changed "7 planning documents" to "9 planning documents" (accurate count)
+- Added new "Planning Documents" section listing all 9 documents with purposes
+- Fixed Forge Points section:
+  - Changed "Five Forge Points" to "Four Forge Points + Apex"
+  - Added beat numbers and locations for each forge point
+- Added "Six Movements" table including Coda (was incorrectly showing 5)
+- Fixed project structure documentation:
+  - Split into "at creation" and "as you progress" sections
+  - Accurately shows what directories exist at each phase
+- Updated skill reference file lists to include all files:
+  - crucible-planner: added `question-key-mapping.md`
+  - crucible-writer: added `bi-chapter-review.md`, `story-bible-commands.md`
+- Removed emoji characters (ASCII-only per project guidelines)
+- Changed Unicode tree characters to ASCII (`+--` instead of special chars)
+
+### Removed
+
+#### Development Files
+- Removed from repository root (archived locally):
+  - `CC Plugins/` - Plugin documentation reference
+  - `Claude Skills/` - Original skill files
+  - `docs/` - Framework documentation
+  - `Example Chapters/` - Sample content
+  - `GAP-ANALYSIS.md`, `IMPLEMENTATION-PLAN.md`, `USER-FLOW-DIAGRAMS.md`
+- These were development/reference files, not part of the plugin itself
+
 ## [1.0.16] - 2025-12-20
 
 ### Fixed
